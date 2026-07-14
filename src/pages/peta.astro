@@ -16,7 +16,7 @@ for (const t of titikList) {
 // Koordinat di bawah bersifat perkiraan (fallback) sampai titik asli dimasukkan.
 const demoPoints = [
   { jenis: 'wisata', label: 'Pantai Loji', lat: -7.0508, lng: 106.5444, linked_slug: 'pantai-loji', desc: 'Garis pantai ±4 km di tepi Samudra Hindia.' },
-  { jenis: 'potensi', label: 'Kantor Desa Loji', lat: -7.059, lng: 106.578, linked_slug: 'profil', desc: 'Pusat pemerintahan Desa Loji, Kp. Bojongkopo.' },
+  { jenis: 'potensi', label: 'Kantor Kelurahan Palabuhanratu', lat: -7.059, lng: 106.578, linked_slug: 'profil', desc: 'Pusat pemerintahan Kelurahan Palabuhanratu, Kp. Cipatuguran.' },
 ];
 
 const finalPoints = titikList.length > 0 ? titikList : demoPoints;
@@ -27,13 +27,13 @@ const finalCounts = titikList.length > 0
 ---
 
 <Layout
-  title="Peta Desa | Desa Loji"
-  description="Peta interaktif Desa Loji: titik wisata, UMKM, dan potensi desa. Klik penanda untuk detail."
+  title="Peta Kelurahan | Kelurahan Palabuhanratu"
+  description="Peta interaktif Kelurahan Palabuhanratu: titik wisata, UMKM, dan potensi kelurahan. Klik penanda untuk detail."
 >
 
 <main id="main" class="mx-auto max-w-[1152px] px-4 sm:px-6 py-6">
-  <h1 class="text-2xl sm:text-3xl font-heading font-extrabold text-primary">Peta Desa Loji</h1>
-  <p class="text-muted mt-1">Jelajahi titik wisata, UMKM, dan potensi desa. Klik penanda untuk detail.</p>
+  <h1 class="text-2xl sm:text-3xl font-heading font-extrabold text-primary">Peta Kelurahan Palabuhanratu</h1>
+  <p class="text-muted mt-1">Jelajahi titik wisata, UMKM, dan potensi kelurahan. Klik penanda untuk detail.</p>
 
   <div class="grid lg:grid-cols-[280px_1fr] gap-5 mt-5">
     <!-- Filter panel -->
@@ -57,7 +57,7 @@ const finalCounts = titikList.length > 0
       </div>
       <hr class="my-4 border-line" />
       <button id="resetView" class="inline-flex items-center gap-2 w-full justify-center border-2 border-primary text-primary font-heading font-semibold py-2.5 rounded-lg hover:bg-primary hover:text-white transition-colors min-h-[44px] text-sm">
-        <i data-lucide="locate-fixed" class="w-5 h-5"></i> Pusatkan ke Desa
+        <i data-lucide="locate-fixed" class="w-5 h-5"></i> Pusatkan ke Kelurahan
       </button>
       <p class="text-xs text-muted mt-3 flex items-center gap-1.5">
         <i data-lucide="info" class="w-4 h-4"></i> Peta gratis berbasis OpenStreetMap.
@@ -65,7 +65,7 @@ const finalCounts = titikList.length > 0
       <div class="mt-4 bg-sand/60 border border-line rounded-lg p-3 flex gap-2">
         <i data-lucide="shield-check" class="w-4 h-4 text-primary shrink-0 mt-0.5"></i>
         <p class="text-xs text-muted">
-          <span class="font-heading font-semibold text-ink">Pengelola desa</span> dapat menambah, menyunting, atau menghapus titik peta melalui <span class="font-medium text-primary">Panel Admin › Kelola Peta</span>.
+          <span class="font-heading font-semibold text-ink">Pengelola Kelurahan</span> dapat menambah, menyunting, atau menghapus titik peta melalui <span class="font-medium text-primary">Panel Admin › Kelola Peta</span>.
         </p>
       </div>
     </aside>

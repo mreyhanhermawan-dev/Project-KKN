@@ -31,27 +31,27 @@ const orgJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'GovernmentOrganization',
   name: `Pemerintah ${SITE_NAME}`,
-  alternateName: ['Desa Loji', 'Desa Loji Sukabumi', 'Desa Loji Simpenan'],
+  alternateName: ['Kelurahan Palabuhanratu', 'Kelurahan Palabuhanratu Sukabumi', 'Kelurahan Palabuhanratu Palabuhanratu'],
   url: SITE_URL,
   email: 'desalojimaju@gmail.com',
   logo: new URL('/favicon.svg', site).href,
-  areaServed: 'Desa Loji, Kecamatan Simpenan, Kabupaten Sukabumi, Jawa Barat',
+  areaServed: 'Kelurahan Palabuhanratu, Kecamatan Palabuhanratu, Kabupaten Sukabumi, Jawa Barat',
   address: {
     '@type': 'PostalAddress',
     streetAddress: 'Jl. Raya Bojongkopo KM.02',
-    addressLocality: 'Simpenan',
+    addressLocality: 'Palabuhanratu',
     addressRegion: 'Jawa Barat',
     postalCode: '43361',
     addressCountry: 'ID',
   },
 };
 
-// Skema WebSite — memperkuat "Desa Loji" sebagai nama situs di hasil pencarian.
+// Skema WebSite — memperkuat "Kelurahan Palabuhanratu" sebagai nama situs di hasil pencarian.
 const websiteJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
   name: SITE_NAME,
-  alternateName: 'Situs Resmi Desa Loji',
+  alternateName: 'Situs Resmi Kelurahan Palabuhanratu',
   url: SITE_URL,
   inLanguage: 'id-ID',
   publisher: { '@type': 'GovernmentOrganization', name: `Pemerintah ${SITE_NAME}` },

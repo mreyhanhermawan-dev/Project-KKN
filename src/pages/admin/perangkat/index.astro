@@ -12,16 +12,16 @@ const inputCls = 'w-full rounded-lg border px-3 py-2 text-sm focus:outline-none'
 const inputStyle = 'border-color:var(--color-border); min-height:40px;';
 ---
 
-<AdminLayout title="Perangkat Desa" breadcrumb="Perangkat Desa">
+<AdminLayout title="Perangkat Kelurahan" breadcrumb="Perangkat Kelurahan">
 
   {saved && (
     <div role="status" class="mb-4 p-3 rounded-lg text-sm font-medium" style="background:#D1FAE5; color:#065F46; border:1px solid #6EE7B7;">
-      Perangkat desa berhasil disimpan.
+      Perangkat kelurahan berhasil disimpan.
     </div>
   )}
   {deleted && (
     <div role="status" class="mb-4 p-3 rounded-lg text-sm font-medium" style="background:#D1FAE5; color:#065F46; border:1px solid #6EE7B7;">
-      Perangkat desa berhasil dihapus.
+      Perangkat kelurahan berhasil dihapus.
     </div>
   )}
 
@@ -36,7 +36,7 @@ const inputStyle = 'border-color:var(--color-border); min-height:40px;';
         </div>
         <div>
           <label for="jabatan" class="block font-heading font-medium text-sm mb-1.5">Jabatan <span>*</span></label>
-          <input type="text" id="jabatan" name="jabatan" required class={inputCls} style={inputStyle} placeholder="cth. Kepala Desa" />
+          <input type="text" id="jabatan" name="jabatan" required class={inputCls} style={inputStyle} placeholder="cth. Kepala Kelurahan" />
         </div>
         <div>
           <label for="urutan" class="block font-heading font-medium text-sm mb-1.5">Urutan Tampil</label>
@@ -51,7 +51,7 @@ const inputStyle = 'border-color:var(--color-border); min-height:40px;';
     <!-- List -->
     <div class="space-y-3">
       {perangkatList.length === 0 ? (
-        <p class="text-center text-text-muted py-8 bg-white rounded-xl border border-border">Belum ada perangkat desa.</p>
+        <p class="text-center text-text-muted py-8 bg-white rounded-xl border border-border">Belum ada perangkat kelurahan.</p>
       ) : perangkatList.map(p => (
         <div class="bg-white rounded-xl border border-border p-4" style="box-shadow:var(--shadow-sm);">
           <form method="POST" action="/api/admin/perangkat" class="grid grid-cols-[1fr_1fr_70px] gap-2 items-end">

@@ -15,9 +15,9 @@ const [visiMisi, ruangLingkup, tugasFungsi, perangkat, s] = await Promise.all([
 ]);
 
 const tiers = {
-  kepala: perangkat.find(p => p.jabatan?.toLowerCase().includes('kepala desa')),
+  kepala: perangkat.find(p => p.jabatan?.toLowerCase().includes('kepala kelurahan')),
   sekdes: perangkat.find(p => p.jabatan?.toLowerCase().includes('sekretaris')),
-  others: perangkat.filter(p => !p.jabatan?.toLowerCase().includes('kepala desa') && !p.jabatan?.toLowerCase().includes('sekretaris')),
+  others: perangkat.filter(p => !p.jabatan?.toLowerCase().includes('kepala kelurahan') && !p.jabatan?.toLowerCase().includes('sekretaris')),
 };
 
 const fmt = (n: number) => n.toLocaleString('id-ID');
@@ -29,8 +29,8 @@ const totalKK = wilayahData.reduce((sum, d) => sum + d.kk, 0);
 ---
 
 <Layout
-  title="Pemerintahan Desa | Desa Loji"
-  description="Pemerintahan Desa Loji: perangkat desa, struktur organisasi, visi & misi, ruang lingkup, tugas & fungsi."
+  title="Pemerintahan Kelurahan | Kelurahan Palabuhanratu"
+  description="Pemerintahan Kelurahan Palabuhanratu: perangkat kelurahan, struktur organisasi, visi & misi, ruang lingkup, tugas & fungsi."
 >
 
 <!-- Hero -->
@@ -52,8 +52,8 @@ const totalKK = wilayahData.reduce((sum, d) => sum + d.kk, 0);
         <i data-lucide="chevron-right" class="w-4 h-4"></i>
         <span class="font-medium">Pemerintahan</span>
       </nav>
-      <h1 class="text-3xl sm:text-4xl font-heading font-extrabold mt-1">Pemerintahan Desa Loji</h1>
-      <p class="text-white/85 mt-1 max-w-xl">Perangkat, struktur, dan visi-misi penyelenggara pemerintahan desa.</p>
+      <h1 class="text-3xl sm:text-4xl font-heading font-extrabold mt-1">Pemerintahan Kelurahan Palabuhanratu</h1>
+      <p class="text-white/85 mt-1 max-w-xl">Perangkat, struktur, dan visi-misi penyelenggara pemerintahan kelurahan.</p>
     </div>
   </div>
 </section>
@@ -62,7 +62,7 @@ const totalKK = wilayahData.reduce((sum, d) => sum + d.kk, 0);
 <div class="subnav sticky top-16 z-30 bg-white border-b border-line">
   <div class="mx-auto max-w-[1152px] px-4 sm:px-6 py-2 flex gap-2 overflow-x-auto">
     {[
-      ['#perangkat', 'Perangkat Desa'],
+      ['#perangkat', 'Perangkat Kelurahan'],
       ['#struktur', 'Struktur Organisasi'],
       ['#visi-misi', 'Visi & Misi'],
       ['#ruang-lingkup', 'Ruang Lingkup'],
@@ -80,10 +80,10 @@ const totalKK = wilayahData.reduce((sum, d) => sum + d.kk, 0);
 
 <main id="main" class="mx-auto max-w-[1152px] px-4 sm:px-6 py-10 space-y-14">
 
-  <!-- Perangkat Desa -->
+  <!-- Perangkat Kelurahan -->
   <section id="perangkat" style="scroll-margin-top: 120px;">
-    <h2 class="text-2xl font-heading font-extrabold text-primary">Perangkat Desa</h2>
-    <p class="text-muted mt-2 max-w-2xl">Jajaran perangkat Pemerintah Desa Loji, dari pimpinan hingga pelaksana.</p>
+    <h2 class="text-2xl font-heading font-extrabold text-primary">Perangkat Kelurahan</h2>
+    <p class="text-muted mt-2 max-w-2xl">Jajaran perangkat Pemerintah Kelurahan Palabuhanratu, dari pimpinan hingga pelaksana.</p>
 
     {perangkat.length > 0 ? (
       <div class="mt-8 space-y-6">
@@ -93,9 +93,9 @@ const totalKK = wilayahData.reduce((sum, d) => sum + d.kk, 0);
               <div class="w-36 h-36 rounded-full mx-auto ring-4 ring-sand overflow-hidden" style="background: linear-gradient(135deg, #0E4A6E, #0E9AA7);">
                 <div class="w-full h-full flex items-center justify-center font-heading font-bold text-4xl text-white">{tiers.kepala.nama[0]}</div>
               </div>
-              <span class="inline-block mt-4 text-xs font-heading font-bold px-3 py-1 rounded-full bg-primary text-white uppercase tracking-wide">Kepala Desa</span>
+              <span class="inline-block mt-4 text-xs font-heading font-bold px-3 py-1 rounded-full bg-primary text-white uppercase tracking-wide">Kepala Kelurahan</span>
               <h3 class="font-heading font-bold text-2xl text-ink mt-2">{tiers.kepala.nama}</h3>
-              <p class="text-muted text-sm mt-1">Pemimpin penyelenggaraan pemerintahan desa</p>
+              <p class="text-muted text-sm mt-1">Pemimpin penyelenggaraan pemerintahan kelurahan</p>
             </div>
             <span class="w-px h-8 bg-line" aria-hidden="true"></span>
           </div>
@@ -106,7 +106,7 @@ const totalKK = wilayahData.reduce((sum, d) => sum + d.kk, 0);
               <div class="w-28 h-28 rounded-full mx-auto ring-4 ring-sand overflow-hidden" style="background: linear-gradient(135deg, #0A3650, #0E9AA7);">
                 <div class="w-full h-full flex items-center justify-center font-heading font-bold text-3xl text-white">{tiers.sekdes.nama[0]}</div>
               </div>
-              <span class="inline-block mt-3 text-xs font-heading font-bold px-3 py-1 rounded-full bg-accent text-white uppercase tracking-wide">Sekretaris Desa</span>
+              <span class="inline-block mt-3 text-xs font-heading font-bold px-3 py-1 rounded-full bg-accent text-white uppercase tracking-wide">Sekretaris Kelurahan</span>
               <h3 class="font-heading font-bold text-lg text-ink mt-2">{tiers.sekdes.nama}</h3>
             </div>
             <span class="w-px h-8 bg-line" aria-hidden="true"></span>
@@ -126,15 +126,15 @@ const totalKK = wilayahData.reduce((sum, d) => sum + d.kk, 0);
       </div>
     ) : (
       <div class="mt-8 space-y-6">
-        <!-- Kepala Desa -->
+        <!-- Kepala Kelurahan -->
         <div class="flex flex-col items-center">
           <div class="bg-white border border-line rounded-2xl shadow-[0_4px_10px_rgba(15,36,51,.08)] p-6 sm:p-8 text-center w-full max-w-sm">
             <div class="w-36 h-36 rounded-full mx-auto ring-4 ring-sand flex items-center justify-center" style="background: linear-gradient(135deg, #0E4A6E, #0E9AA7);">
               <i data-lucide="user" class="w-16 h-16 text-white/50"></i>
             </div>
-            <span class="inline-block mt-4 text-xs font-heading font-bold px-3 py-1 rounded-full bg-primary text-white uppercase tracking-wide">Kepala Desa</span>
-            <h3 class="font-heading font-bold text-xl text-ink mt-2">[ Nama Kepala Desa ]</h3>
-            <p class="text-muted text-sm mt-1">Pemimpin penyelenggaraan pemerintahan desa</p>
+            <span class="inline-block mt-4 text-xs font-heading font-bold px-3 py-1 rounded-full bg-primary text-white uppercase tracking-wide">Kepala Kelurahan</span>
+            <h3 class="font-heading font-bold text-xl text-ink mt-2">[ Nama Kepala Kelurahan ]</h3>
+            <p class="text-muted text-sm mt-1">Pemimpin penyelenggaraan pemerintahan kelurahan</p>
           </div>
           <span class="w-px h-8 bg-line" aria-hidden="true"></span>
         </div>
@@ -144,7 +144,7 @@ const totalKK = wilayahData.reduce((sum, d) => sum + d.kk, 0);
             <div class="w-28 h-28 rounded-full mx-auto ring-4 ring-sand flex items-center justify-center" style="background: linear-gradient(135deg, #0A3650, #0E9AA7);">
               <i data-lucide="user" class="w-12 h-12 text-white/50"></i>
             </div>
-            <span class="inline-block mt-3 text-xs font-heading font-bold px-3 py-1 rounded-full bg-accent text-white uppercase tracking-wide">Sekretaris Desa</span>
+            <span class="inline-block mt-3 text-xs font-heading font-bold px-3 py-1 rounded-full bg-accent text-white uppercase tracking-wide">Sekretaris Kelurahan</span>
             <h3 class="font-heading font-bold text-lg text-ink mt-2">[ Nama ]</h3>
           </div>
           <span class="w-px h-8 bg-line" aria-hidden="true"></span>
@@ -168,9 +168,9 @@ const totalKK = wilayahData.reduce((sum, d) => sum + d.kk, 0);
   <!-- Struktur Organisasi -->
   <section id="struktur" style="scroll-margin-top: 120px;">
     <h2 class="text-2xl font-heading font-extrabold text-primary">Struktur Organisasi</h2>
-    <p class="text-muted mt-2 max-w-2xl">Bagan struktur organisasi Pemerintah Desa Loji beserta jajaran perangkatnya.</p>
+    <p class="text-muted mt-2 max-w-2xl">Bagan struktur organisasi Pemerintah Kelurahan Palabuhanratu beserta jajaran perangkatnya.</p>
     <div class="mt-4 rounded-2xl overflow-hidden border border-line shadow-[0_4px_10px_rgba(15,36,51,.08)]">
-      <img src="/images/struktur_organisasi.png" alt="Bagan Struktur Organisasi Desa Loji" class="w-full h-auto object-cover" />
+      <img src="/images/struktur_organisasi.png" alt="Bagan Struktur Organisasi Kelurahan Palabuhanratu" class="w-full h-auto object-cover" />
     </div>
   </section>
 
@@ -182,7 +182,7 @@ const totalKK = wilayahData.reduce((sum, d) => sum + d.kk, 0);
         <span class="inline-flex items-center gap-2 text-white/80 font-heading font-semibold">
           <i data-lucide="target" class="w-5 h-5"></i> Visi
         </span>
-        <p class="text-xl font-heading font-semibold mt-3 leading-snug" set:html={visiMisi?.content_html ?? '"Mewujudkan Desa Loji yang maju, mandiri, dan sejahtera berbasis potensi bahari dan pariwisata yang berkelanjutan."'} />
+        <p class="text-xl font-heading font-semibold mt-3 leading-snug" set:html={visiMisi?.content_html ?? '"Mewujudkan Kelurahan Palabuhanratu yang maju, mandiri, dan sejahtera berbasis potensi bahari dan pariwisata yang berkelanjutan."'} />
       </div>
       <div class="bg-white border border-line rounded-2xl p-7">
         <span class="inline-flex items-center gap-2 text-primary font-heading font-semibold">
@@ -208,7 +208,7 @@ const totalKK = wilayahData.reduce((sum, d) => sum + d.kk, 0);
   <!-- Ruang Lingkup -->
   <section id="ruang-lingkup" style="scroll-margin-top: 120px;">
     <h2 class="text-2xl font-heading font-extrabold text-primary">Ruang Lingkup</h2>
-    <p class="text-muted mt-2 max-w-3xl leading-relaxed" set:html={ruangLingkup?.content_html ?? 'Bagian ini menjelaskan cakupan wilayah administratif Desa Loji, jumlah dusun/RW/RT, serta lingkup kewenangan dan layanan yang diselenggarakan pemerintah desa bagi masyarakat.'} />
+    <p class="text-muted mt-2 max-w-3xl leading-relaxed" set:html={ruangLingkup?.content_html ?? 'Bagian ini menjelaskan cakupan wilayah administratif Kelurahan Palabuhanratu, jumlah dusun/RW/RT, serta lingkup kewenangan dan layanan yang diselenggarakan pemerintah kelurahan bagi masyarakat.'} />
     <div class="grid sm:grid-cols-4 gap-4 mt-4">
       {[
         { icon: 'layers', label: 'Dusun', value: String(wilayahData.length) },
@@ -264,15 +264,15 @@ const totalKK = wilayahData.reduce((sum, d) => sum + d.kk, 0);
   <!-- Tugas & Fungsi -->
   <section id="tugas-fungsi" style="scroll-margin-top: 120px;">
     <h2 class="text-2xl font-heading font-extrabold text-primary">Tugas & Fungsi</h2>
-    <p class="text-muted mt-2 max-w-2xl">Peran masing-masing perangkat dalam penyelenggaraan pemerintahan desa.</p>
+    <p class="text-muted mt-2 max-w-2xl">Peran masing-masing perangkat dalam penyelenggaraan pemerintahan kelurahan.</p>
     <div class="grid sm:grid-cols-2 gap-4 mt-4">
       {[
-        { icon: 'user-round', title: 'Kepala Desa', desc: 'Memimpin penyelenggaraan pemerintahan, pembangunan, dan pemberdayaan masyarakat desa.' },
-        { icon: 'clipboard-list', title: 'Sekretaris Desa', desc: 'Membantu kepala desa di bidang administrasi dan tata usaha pemerintahan.' },
-        { icon: 'wallet', title: 'Kaur Keuangan', desc: 'Mengelola keuangan dan penatausahaan anggaran desa.' },
+        { icon: 'user-round', title: 'Kepala Kelurahan', desc: 'Memimpin penyelenggaraan pemerintahan, pembangunan, dan pemberdayaan masyarakat kelurahan.' },
+        { icon: 'clipboard-list', title: 'Sekretaris Kelurahan', desc: 'Membantu kepala kelurahan di bidang administrasi dan tata usaha pemerintahan.' },
+        { icon: 'wallet', title: 'Kaur Keuangan', desc: 'Mengelola keuangan dan penatausahaan anggaran kelurahan.' },
         { icon: 'landmark', title: 'Kasi Pemerintahan', desc: 'Melaksanakan urusan pemerintahan, kependudukan, dan pertanahan.' },
         { icon: 'heart-handshake', title: 'Kasi Kesejahteraan', desc: 'Melaksanakan pemberdayaan masyarakat dan kesejahteraan sosial.' },
-        { icon: 'clipboard-check', title: 'Kasi Pelayanan', desc: 'Menyelenggarakan pelayanan kepada masyarakat desa.' },
+        { icon: 'clipboard-check', title: 'Kasi Pelayanan', desc: 'Menyelenggarakan pelayanan kepada masyarakat kelurahan.' },
       ].map(item => (
         <div class="bg-white border border-line rounded-xl p-5 shadow-[0_4px_10px_rgba(15,36,51,.08)]">
           <h3 class="font-heading font-semibold text-ink flex items-center gap-2">

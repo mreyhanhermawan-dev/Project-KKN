@@ -6,11 +6,11 @@ const env = getEnv();
 const s = env ? await getPengaturan(env.DB) : {};
 
 const sosial = [
-  { key: 'sosial_whatsapp', label: 'WhatsApp resmi desa', hover: 'hover:bg-cta',
+  { key: 'sosial_whatsapp', label: 'WhatsApp resmi kelurahan', hover: 'hover:bg-cta',
     icon: '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>' },
-  { key: 'sosial_facebook', label: 'Facebook resmi desa', hover: 'hover:bg-accent',
+  { key: 'sosial_facebook', label: 'Facebook resmi kelurahan', hover: 'hover:bg-accent',
     icon: '<path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>' },
-  { key: 'sosial_instagram', label: 'Instagram resmi desa', hover: 'hover:bg-accent',
+  { key: 'sosial_instagram', label: 'Instagram resmi kelurahan', hover: 'hover:bg-accent',
     icon: '<rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>' },
 ].filter(x => s[x.key]);
 ---
@@ -26,10 +26,10 @@ const sosial = [
           style="color: var(--color-primary);"
           aria-hidden="true"
         >DL</span>
-        <span class="font-heading font-bold text-white">Desa Loji</span>
+        <span class="font-heading font-bold text-white">Kelurahan Palabuhanratu</span>
       </div>
       <p class="text-sm text-white/70">
-        Situs resmi Pemerintah Desa Loji, Kecamatan Simpenan, Kabupaten Sukabumi.
+        Situs resmi Pemerintah Kelurahan Palabuhanratu, Kecamatan Palabuhanratu, Kabupaten Sukabumi.
       </p>
     </div>
 
@@ -37,10 +37,10 @@ const sosial = [
     <div>
       <h3 class="font-heading font-semibold text-white mb-3">Jelajahi</h3>
       <ul class="space-y-2 text-sm">
-        <li><a href="/profil" class="hover:text-accent transition-colors duration-150">Profil Desa</a></li>
+        <li><a href="/profil" class="hover:text-accent transition-colors duration-150">Profil Kelurahan</a></li>
         <li><a href="/wisata" class="hover:text-accent transition-colors duration-150">Wisata</a></li>
         <li><a href="/umkm" class="hover:text-accent transition-colors duration-150">Direktori UMKM</a></li>
-        <li><a href="/peta" class="hover:text-accent transition-colors duration-150">Peta Desa</a></li>
+        <li><a href="/peta" class="hover:text-accent transition-colors duration-150">Peta Kelurahan</a></li>
         <li><a href="/berita" class="hover:text-accent transition-colors duration-150">Berita</a></li>
       </ul>
     </div>
@@ -91,7 +91,7 @@ const sosial = [
   <!-- Bottom bar -->
   <div class="border-t border-white/10">
     <div class="mx-auto max-w-6xl px-4 md:px-6 py-4 text-xs text-white/60 flex flex-col sm:flex-row justify-between gap-2">
-      <span>© 2026 Pemerintah Desa Loji. Seluruh aset terdaftar atas nama desa.</span>
+      <span>© 2026 Pemerintahan Kelurahan Palabuhanratu. Seluruh aset terdaftar atas nama kelurahan.</span>
       <span>Dibuat oleh Tim KKNT Inovasi IPB 2026</span>
     </div>
   </div>
