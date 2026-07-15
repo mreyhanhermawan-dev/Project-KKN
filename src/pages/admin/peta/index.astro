@@ -22,6 +22,11 @@ const titikJson = JSON.stringify(titikList);
       Titik peta berhasil dihapus.
     </div>
   )}
+  {Astro.url.searchParams.get('error') && (
+    <div role="alert" class="mb-4 p-3 rounded-lg text-sm font-medium" style="background:#FEE2E2; color:#991B1B; border:1px solid #FECACA;">
+      ⚠️ Gagal menyimpan titik peta. Pastikan semua kolom wajib sudah diisi dan koordinat valid (klik peta untuk mengisi otomatis).
+    </div>
+  )}
 
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     <!-- Map picker -->
@@ -46,6 +51,7 @@ const titikJson = JSON.stringify(titikList);
           <select id="jenis" name="jenis" required
             class="w-full rounded-lg border px-4 py-2.5 text-base focus:outline-none"
             style="border-color:var(--color-border); min-height:44px;">
+            <option value="pemerintahan">Kelurahan</option>
             <option value="wisata">Wisata</option>
             <option value="umkm">UMKM</option>
             <option value="potensi">Potensi</option>
@@ -56,6 +62,12 @@ const titikJson = JSON.stringify(titikList);
           <input type="text" id="linked_slug" name="linked_slug" required
             class="w-full rounded-lg border px-4 py-2.5 text-base focus:outline-none"
             style="border-color:var(--color-border); min-height:44px;" placeholder="cth. pantai-loji" />
+        </div>
+        <div>
+          <label for="desc" class="block font-heading font-medium text-sm mb-1.5">Deskripsi Singkat</label>
+          <input type="text" id="desc" name="desc"
+            class="w-full rounded-lg border px-4 py-2.5 text-base focus:outline-none"
+            style="border-color:var(--color-border); min-height:44px;" placeholder="cth. Garis pantai ±4 km di tepi Samudra Hindia" />
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
@@ -129,24 +141,27 @@ const titikJson = JSON.stringify(titikList);
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN/I/E=" crossorigin=""></script>
 
-<script define:vars={{ titikJson }}>
-  const titiks = JSON.parse(titikJson);
-  const map = L.map('admin-map').setView([-7.085, 106.505], 14);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors'
-  }).addTo(map);
-
-  const colors = { wisata: '#0E9AA7', umkm: '#15803D', potensi: '#0E4A6E' };
-  titiks.forEach(t => {
-    const icon = L.circleMarker([t.lat, t.lng], {
-      radius: 8, fillColor: colors[t.jenis] ?? '#666', color: '#fff',
-      weight: 2, opacity: 1, fillOpacity: 0.9
+<script is:inline define:vars={{ titikJson }}>
+  document.addEventListener('DOMContentLoaded', () => {
+    const titiks = JSON.parse(titikJson);
+    const map = L.map('admin-map').setView([-7.0500, 106.5413], 14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
     }).addTo(map);
-    if (t.label) icon.bindPopup(t.label);
-  });
 
-  map.on('click', (e) => {
-    document.getElementById('lat').value = e.latlng.lat.toFixed(6);
-    document.getElementById('lng').value = e.latlng.lng.toFixed(6);
+    const colors = { wisata: '#0E9AA7', umkm: '#15803D', potensi: '#0E4A6E' };
+    titiks.forEach(t => {
+      const icon = L.circleMarker([t.lat, t.lng], {
+        radius: 8, fillColor: colors[t.jenis] ?? '#666', color: '#fff',
+        weight: 2, opacity: 1, fillOpacity: 0.9
+      }).addTo(map);
+      if (t.label) icon.bindPopup(t.label);
+    });
+
+    map.on('click', (e) => {
+      document.getElementById('lat').value = e.latlng.lat.toFixed(6);
+      document.getElementById('lng').value = e.latlng.lng.toFixed(6);
+    });
   });
 </script>
+

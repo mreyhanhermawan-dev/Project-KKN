@@ -27,7 +27,7 @@ const getBeritaImg = (i: number) => {
 const finalBerita = beritaList.length > 0
   ? beritaList.map((b, i) => {
       const cover = covers.get(b.id);
-      return { slug: b.slug, judul: b.judul, published_at: b.published_at ?? '', content_html: b.content_html, featured: i === 0, img: cover ? mediaUrl(cover) : getBeritaImg(i) };
+      return { slug: b.slug, judul: b.judul, published_at: b.published_at ?? '', content_html: b.content_html, featured: i === 0, img: cover ? mediaUrl(cover) : null };
     })
   : demoBerita;
 
@@ -47,19 +47,20 @@ const restBerita = finalBerita.slice(1);
   {/* Featured article */}
   {featuredBerita && (
     <a href={`/berita/${featuredBerita.slug}`}
-       class="group grid md:grid-cols-2 gap-0 items-stretch bg-white border border-line rounded-2xl overflow-hidden shadow-[0_4px_10px_rgba(15,36,51,.08)] hover:shadow-[0_12px_24px_rgba(15,36,51,.12)] hover:border-accent transition-all mt-6">
-      <div class="aspect-[16/10] md:aspect-auto overflow-hidden">
-        {featuredBerita.img ? (
+       class:list={[
+         "group gap-0 items-stretch bg-white border border-line rounded-2xl overflow-hidden shadow-[0_4px_10px_rgba(15,36,51,.08)] hover:shadow-[0_12px_24px_rgba(15,36,51,.12)] hover:border-accent transition-all mt-6",
+         featuredBerita.img ? "grid md:grid-cols-2" : "block"
+       ]}>
+      {featuredBerita.img && (
+        <div class="aspect-[16/10] md:aspect-auto overflow-hidden">
           <img
             src={featuredBerita.img}
             alt={featuredBerita.judul}
             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             loading="eager"
           />
-        ) : (
-          <div class="w-full h-full min-h-[200px]" style="background: linear-gradient(135deg, #0E4A6E 0%, #0E9AA7 60%, #3FB5BF 100%);"></div>
-        )}
-      </div>
+        </div>
+      )}
       <div class="p-6 sm:p-8 flex flex-col justify-center">
         <span class="text-[13px] font-heading font-semibold px-2.5 py-1 rounded-full bg-[#E0F5F7] text-[#0A6B74] w-max">Terbaru</span>
         <time class="text-sm text-muted mt-3">
@@ -82,13 +83,11 @@ const restBerita = finalBerita.slice(1);
       {restBerita.map(b => (
         <a href={`/berita/${b.slug}`}
            class="group block bg-white border border-line rounded-2xl overflow-hidden shadow-[0_4px_10px_rgba(15,36,51,.08)] hover:shadow-[0_12px_24px_rgba(15,36,51,.12)] hover:border-accent transition-all">
-          <div class="aspect-[16/9] overflow-hidden">
-            {b.img ? (
+          {b.img && (
+            <div class="aspect-[16/9] overflow-hidden">
               <img src={b.img} alt={b.judul} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
-            ) : (
-              <div class="w-full h-full" style="background: linear-gradient(135deg, #0E4A6E 0%, #0E9AA7 60%, #3FB5BF 100%);"></div>
-            )}
-          </div>
+            </div>
+          )}
           <div class="p-5">
             <time class="text-xs font-heading font-semibold text-muted">
               {b.published_at ? formatTanggal(b.published_at) : ''}

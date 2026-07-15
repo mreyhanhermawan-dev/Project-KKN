@@ -16,7 +16,7 @@ for (const t of titikList) {
 // Koordinat di bawah bersifat perkiraan (fallback) sampai titik asli dimasukkan.
 const demoPoints = [
   { jenis: 'wisata', label: 'Pantai Loji', lat: -7.0508, lng: 106.5444, linked_slug: 'pantai-loji', desc: 'Garis pantai ±4 km di tepi Samudra Hindia.' },
-  { jenis: 'potensi', label: 'Kantor Kelurahan Palabuhanratu', lat: -7.059, lng: 106.578, linked_slug: 'profil', desc: 'Pusat pemerintahan Kelurahan Palabuhanratu, Kp. Cipatuguran.' },
+  { jenis: 'potensi', label: 'Kantor Kelurahan Palabuhanratu', lat: -6.9873, lng: 106.6539, linked_slug: 'profil', desc: 'Pusat pemerintahan Kelurahan Palabuhanratu, Kp. Cipatuguran.' },
 ];
 
 const finalPoints = titikList.length > 0 ? titikList : demoPoints;
@@ -81,7 +81,7 @@ const finalCounts = titikList.length > 0
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 
 <script define:vars={{ finalJson }}>
-  const CENTER = [-7.0589, 106.5778], ZOOM = 13;
+  const CENTER = [-6.9873, 106.5575], ZOOM = 13;
   const map = L.map('peta-map', { scrollWheelZoom: false }).setView(CENTER, ZOOM);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
   map.on('focus', () => map.scrollWheelZoom.enable());

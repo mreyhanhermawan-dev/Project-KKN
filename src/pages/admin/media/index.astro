@@ -5,9 +5,16 @@ import { getAllMedia } from '../../../lib/db/media';
 import { getEnv } from '@lib/env';
 const env = getEnv();
 const mediaList = env ? await getAllMedia(env.DB) : [];
+const deleted = Astro.url.searchParams.get('deleted');
 ---
 
 <AdminLayout title="Media" breadcrumb="Media">
+
+  {deleted && (
+    <div role="status" class="mb-4 p-3 rounded-lg text-sm font-medium" style="background:#D1FAE5; color:#065F46; border:1px solid #6EE7B7;">
+      Gambar berhasil dihapus.
+    </div>
+  )}
 
   <div class="flex items-center justify-between mb-6">
     <h2 class="font-heading font-bold text-xl" style="color:var(--color-primary);">Perpustakaan Media</h2>
@@ -16,6 +23,10 @@ const mediaList = env ? await getAllMedia(env.DB) : [];
   <div class="bg-white rounded-xl border border-border p-6" style="box-shadow:var(--shadow-sm);">
     <p class="text-text-muted text-sm mb-4">
       Upload gambar dilakukan langsung dari form wisata, UMKM, dan berita. Total file tersimpan: <strong>{mediaList.length}</strong>
+    </p>
+    <p class="text-xs text-text-muted mb-5 flex items-center gap-1.5">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Arahkan kursor ke gambar untuk melihat tombol hapus. Menghapus gambar akan melepas tautan dari semua konten terkait.
     </p>
 
     {mediaList.length === 0 ? (
@@ -30,8 +41,26 @@ const mediaList = env ? await getAllMedia(env.DB) : [];
               class="w-full h-full object-cover"
               loading="lazy"
             />
-            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-1.5">
-              <p class="text-white text-xs leading-tight line-clamp-2">{m.alt}</p>
+            <!-- Overlay info + tombol hapus -->
+            <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-between p-2">
+              <p class="text-white text-xs leading-tight line-clamp-2 w-full">{m.alt}</p>
+              <form
+                method="POST"
+                action="/api/admin/media/manage"
+                onsubmit="return confirm('Hapus gambar ini permanen? Gambar akan terlepas dari semua konten.')"
+                class="w-full"
+              >
+                <input type="hidden" name="_action" value="delete" />
+                <input type="hidden" name="media_id" value={String(m.id)} />
+                <input type="hidden" name="back" value="/admin/media?deleted=1" />
+                <button
+                  type="submit"
+                  class="w-full py-1 rounded text-xs font-heading font-semibold cursor-pointer transition-colors"
+                  style="background:#DC2626; color:#fff;"
+                >
+                  Hapus
+                </button>
+              </form>
             </div>
           </div>
         ))}

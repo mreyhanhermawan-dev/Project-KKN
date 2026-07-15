@@ -316,9 +316,9 @@ const pencaharianMax = Math.max(1, ...pencaharianData.map(d => d.value));
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script is:inline>
   document.addEventListener('DOMContentLoaded', function() {
-    var map = L.map('profil-map', { scrollWheelZoom: false }).setView([-7.0589, 106.5778], 14);
+    var map = L.map('profil-map', { scrollWheelZoom: false }).setView([-7.0500, 106.5413], 14);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
-    L.marker([-7.0589, 106.5778]).addTo(map).bindPopup('<b>Kelurahan Palabuhanratu</b><br>Kec. Palabuhanratu, Sukabumi');
+    L.marker([-7.0500, 106.5413]).addTo(map).bindPopup('<b>Kelurahan Palabuhanratu</b><br>Kec. Palabuhanratu, Sukabumi');
     if (typeof lucide !== 'undefined') lucide.createIcons();
   });
   setTimeout(function() {

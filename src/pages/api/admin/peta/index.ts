@@ -11,12 +11,14 @@ export const POST: APIRoute = async ({ request, locals, redirect }) => {
   const jenis = fd.get('jenis') as 'wisata' | 'umkm' | 'potensi';
   const linked_slug = (fd.get('linked_slug') as string)?.trim();
   const label = (fd.get('label') as string)?.trim() || null;
+  const desc = (fd.get('desc') as string)?.trim() || null;
 
   if (!env || isNaN(lat) || isNaN(lng) || !jenis || !linked_slug) {
     return redirect('/admin/peta?error=1');
   }
 
-  await createTitikPeta({ lat, lng, jenis, linked_slug, label }, env.DB);
+  await createTitikPeta({ lat, lng, jenis, linked_slug, label, desc }, env.DB);
   await purgeCache(['/peta', '/']);
   return redirect('/admin/peta?saved=1');
 };
+

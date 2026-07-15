@@ -7,9 +7,21 @@ const env = getEnv();
 const perangkatList = env ? await getPerangkatDesa(env.DB) : [];
 const saved = Astro.url.searchParams.get('saved');
 const deleted = Astro.url.searchParams.get('deleted');
+const hasError = Astro.url.searchParams.get('error');
 
 const inputCls = 'w-full rounded-lg border px-3 py-2 text-sm focus:outline-none';
 const inputStyle = 'border-color:var(--color-border); min-height:40px;';
+
+const levelOptions = [
+  { value: 1, label: 'Kepala Kelurahan' },
+  { value: 2, label: 'Sekretaris' },
+  { value: 3, label: 'Staf / Pelaksana' },
+];
+const levelLabel = (l: number) => levelOptions.find(o => o.value === l)?.label ?? 'Staf / Pelaksana';
+const levelBadgeStyle = (l: number) =>
+  l === 1 ? 'background:#0E4A6E; color:#fff;' :
+  l === 2 ? 'background:#0E9AA7; color:#fff;' :
+             'background:#F1F5F9; color:#475569;';
 ---
 
 <AdminLayout title="Perangkat Kelurahan" breadcrumb="Perangkat Kelurahan">
@@ -22,6 +34,11 @@ const inputStyle = 'border-color:var(--color-border); min-height:40px;';
   {deleted && (
     <div role="status" class="mb-4 p-3 rounded-lg text-sm font-medium" style="background:#D1FAE5; color:#065F46; border:1px solid #6EE7B7;">
       Perangkat kelurahan berhasil dihapus.
+    </div>
+  )}
+  {hasError && (
+    <div role="alert" class="mb-4 p-3 rounded-lg text-sm font-medium" style="background:#FEE2E2; color:#991B1B; border:1px solid #FECACA;">
+      ⚠️ Gagal menyimpan. Pastikan nama dan jabatan sudah diisi.
     </div>
   )}
 
@@ -39,8 +56,18 @@ const inputStyle = 'border-color:var(--color-border); min-height:40px;';
           <input type="text" id="jabatan" name="jabatan" required class={inputCls} style={inputStyle} placeholder="cth. Kepala Kelurahan" />
         </div>
         <div>
+          <label for="level" class="block font-heading font-medium text-sm mb-1.5">Level Hierarki <span>*</span></label>
+          <select id="level" name="level" required class={inputCls} style={inputStyle}>
+            {levelOptions.map(o => (
+              <option value={o.value}>{o.label}</option>
+            ))}
+          </select>
+          <p class="text-xs text-text-muted mt-1">Menentukan posisi dalam struktur organisasi di halaman publik.</p>
+        </div>
+        <div>
           <label for="urutan" class="block font-heading font-medium text-sm mb-1.5">Urutan Tampil</label>
           <input type="number" id="urutan" name="urutan" value={perangkatList.length} class={inputCls} style={inputStyle} />
+          <p class="text-xs text-text-muted mt-1">Urutan tampil di antara perangkat dengan level yang sama.</p>
         </div>
         <button type="submit" class="w-full rounded-lg font-heading font-semibold text-white py-2.5 cursor-pointer" style="background:var(--color-cta); min-height:44px;">
           Tambah Perangkat
@@ -50,11 +77,18 @@ const inputStyle = 'border-color:var(--color-border); min-height:40px;';
 
     <!-- List -->
     <div class="space-y-3">
+      <h2 class="font-heading font-bold text-xl" style="color:var(--color-primary);">Daftar Perangkat</h2>
       {perangkatList.length === 0 ? (
         <p class="text-center text-text-muted py-8 bg-white rounded-xl border border-border">Belum ada perangkat kelurahan.</p>
       ) : perangkatList.map(p => (
         <div class="bg-white rounded-xl border border-border p-4" style="box-shadow:var(--shadow-sm);">
-          <form method="POST" action="/api/admin/perangkat" class="grid grid-cols-[1fr_1fr_70px] gap-2 items-end">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="text-xs font-heading font-bold px-2.5 py-0.5 rounded-full" style={levelBadgeStyle(p.level)}>
+              {levelLabel(p.level)}
+            </span>
+            <span class="text-xs text-text-muted">Urutan: {p.urutan}</span>
+          </div>
+          <form method="POST" action="/api/admin/perangkat" class="grid grid-cols-2 gap-2">
             <input type="hidden" name="id" value={p.id} />
             <div>
               <label class="block text-xs text-text-muted mb-1">Nama</label>
@@ -65,10 +99,18 @@ const inputStyle = 'border-color:var(--color-border); min-height:40px;';
               <input type="text" name="jabatan" value={p.jabatan} required class={inputCls} style={inputStyle} />
             </div>
             <div>
+              <label class="block text-xs text-text-muted mb-1">Level Hierarki</label>
+              <select name="level" class={inputCls} style={inputStyle}>
+                {levelOptions.map(o => (
+                  <option value={o.value} selected={o.value === p.level}>{o.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
               <label class="block text-xs text-text-muted mb-1">Urutan</label>
               <input type="number" name="urutan" value={p.urutan} class={inputCls} style={inputStyle} />
             </div>
-            <div class="col-span-3 flex justify-end gap-2 mt-1">
+            <div class="col-span-2 flex justify-end gap-2 mt-1">
               <button type="submit" class="px-3 py-1.5 rounded-md text-xs font-heading font-medium border cursor-pointer hover:bg-sand" style="border-color:var(--color-border);">
                 Simpan
               </button>

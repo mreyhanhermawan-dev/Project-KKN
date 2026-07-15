@@ -6,8 +6,9 @@ import { getPengaturan } from '../lib/db/pengaturan';
 import { getEnv } from '@lib/env';
 
 const env = getEnv();
-const [visiMisi, ruangLingkup, tugasFungsi, perangkat, s] = await Promise.all([
+const [visiMisi, misi, ruangLingkup, tugasFungsi, perangkat, s] = await Promise.all([
   env ? getSection('pemerintahan-visi-misi', env.DB) : null,
+  env ? getSection('pemerintahan-misi', env.DB) : null,
   env ? getSection('pemerintahan-ruang-lingkup', env.DB) : null,
   env ? getSection('pemerintahan-tugas-fungsi', env.DB) : null,
   env ? getPerangkatDesa(env.DB) : [],
@@ -15,9 +16,9 @@ const [visiMisi, ruangLingkup, tugasFungsi, perangkat, s] = await Promise.all([
 ]);
 
 const tiers = {
-  kepala: perangkat.find(p => p.jabatan?.toLowerCase().includes('kepala kelurahan')),
-  sekdes: perangkat.find(p => p.jabatan?.toLowerCase().includes('sekretaris')),
-  others: perangkat.filter(p => !p.jabatan?.toLowerCase().includes('kepala kelurahan') && !p.jabatan?.toLowerCase().includes('sekretaris')),
+  kepala: perangkat.find(p => p.level === 1),
+  sekdes:  perangkat.find(p => p.level === 2),
+  others:  perangkat.filter(p => p.level === 3),
 };
 
 const fmt = (n: number) => n.toLocaleString('id-ID');
@@ -37,8 +38,8 @@ const totalKK = wilayahData.reduce((sum, d) => sum + d.kk, 0);
 <section class="relative">
   <div class="h-48 sm:h-60 overflow-hidden">
     <img
-      src="/images/kantor_desa.png"
-      alt="Kantor Desa Loji"
+      src="/images/kantor_kelurahan.png"
+      alt="Kantor Kelurahan Palabuhanratu"
       class="w-full h-full object-cover"
     />
   </div>
@@ -188,19 +189,10 @@ const totalKK = wilayahData.reduce((sum, d) => sum + d.kk, 0);
         <span class="inline-flex items-center gap-2 text-primary font-heading font-semibold">
           <i data-lucide="list-checks" class="w-5 h-5"></i> Misi
         </span>
-        <ul class="mt-3 space-y-2.5">
-          {[
-            'Meningkatkan pelayanan publik yang transparan dan akuntabel.',
-            'Mengembangkan potensi pariwisata dan UMKM lokal.',
-            'Menjaga kelestarian lingkungan pesisir dan sumber daya alam.',
-            'Memperkuat partisipasi dan gotong royong masyarakat.',
-          ].map((item, i) => (
-            <li class="flex gap-3">
-              <span class="w-6 h-6 rounded-full bg-sand text-primary grid place-items-center text-sm font-heading font-bold shrink-0">{i + 1}</span>
-              <span class="text-muted">{item}</span>
-            </li>
-          ))}
-        </ul>
+        <div
+          class="mt-3 prose prose-sm max-w-none text-muted [&_ol]:space-y-2.5 [&_ol]:list-none [&_ol]:pl-0 [&_li]:flex [&_li]:gap-3 [&_li]:items-start"
+          set:html={misi?.content_html ?? '<ol><li>Meningkatkan pelayanan publik yang transparan dan akuntabel.</li><li>Mengembangkan potensi pariwisata dan UMKM lokal.</li><li>Menjaga kelestarian lingkungan pesisir dan sumber daya alam.</li><li>Memperkuat partisipasi dan gotong royong masyarakat.</li></ol>'}
+        />
       </div>
     </div>
   </section>

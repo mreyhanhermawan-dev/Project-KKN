@@ -5,6 +5,7 @@ export interface TitikPeta {
   jenis: 'wisata' | 'umkm' | 'potensi';
   linked_slug: string;
   label: string | null;
+  desc: string | null;
 }
 
 export async function getAllTitikPeta(db: D1Database): Promise<TitikPeta[]> {
@@ -17,8 +18,8 @@ export async function createTitikPeta(
   db: D1Database
 ): Promise<number> {
   const r = await db.prepare(
-    'INSERT INTO titik_peta (lat, lng, jenis, linked_slug, label) VALUES (?, ?, ?, ?, ?) RETURNING id'
-  ).bind(data.lat, data.lng, data.jenis, data.linked_slug, data.label).first<{ id: number }>();
+    'INSERT INTO titik_peta (lat, lng, jenis, linked_slug, label, desc) VALUES (?, ?, ?, ?, ?, ?) RETURNING id'
+  ).bind(data.lat, data.lng, data.jenis, data.linked_slug, data.label, data.desc).first<{ id: number }>();
   return r!.id;
 }
 
@@ -28,8 +29,8 @@ export async function updateTitikPeta(
   db: D1Database
 ): Promise<void> {
   await db.prepare(
-    'UPDATE titik_peta SET lat=?, lng=?, jenis=?, linked_slug=?, label=? WHERE id=?'
-  ).bind(data.lat, data.lng, data.jenis, data.linked_slug, data.label, id).run();
+    'UPDATE titik_peta SET lat=?, lng=?, jenis=?, linked_slug=?, label=?, desc=? WHERE id=?'
+  ).bind(data.lat, data.lng, data.jenis, data.linked_slug, data.label, data.desc, id).run();
 }
 
 export async function deleteTitikPeta(id: number, db: D1Database): Promise<void> {

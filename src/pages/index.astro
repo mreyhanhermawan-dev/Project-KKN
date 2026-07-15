@@ -73,7 +73,7 @@ const finalUmkm = umkmList.length > 0
 const finalBerita = beritaList.length > 0
   ? beritaList.map(b => {
       const cover = beritaCovers.get(b.id);
-      return { slug: b.slug, judul: b.judul, published_at: b.published_at ?? '', img: cover ? mediaUrl(cover) : '/images/gotong_royong.png', ringkasan: excerpt(b.content_html, 120) };
+      return { slug: b.slug, judul: b.judul, published_at: b.published_at ?? '', img: cover ? mediaUrl(cover) : null, ringkasan: excerpt(b.content_html, 120) };
     })
   : demoBerita;
 ---
@@ -131,7 +131,7 @@ const finalBerita = beritaList.length > 0
       {[
         { href: '/wisata', label: 'Wisata', img: '/images/tile_wisata.png' },
         { href: '/umkm', label: 'UMKM', img: '/images/tile_umkm.png' },
-        { href: '/peta', label: 'Peta Kelurahan', img: '/images/tile_peta.png' },
+        { href: '/layanan', label: 'Layanan Kelurahan', img: '/images/tile_layanan.png' },
         { href: '/berita', label: 'Berita', img: '/images/tile_berita.png' },
       ].map(tile => (
         <a
@@ -335,18 +335,16 @@ const finalBerita = beritaList.length > 0
     <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
       {finalBerita.map(b => (
         <a href={`/berita/${b.slug}`} class="group block bg-white border border-line rounded-2xl overflow-hidden shadow-[0_4px_10px_rgba(15,36,51,.08)] hover:shadow-[0_12px_24px_rgba(15,36,51,.12)] hover:border-accent transition-all">
-          <div class="aspect-[16/9] overflow-hidden">
-            {b.img ? (
+          {b.img && (
+            <div class="aspect-[16/9] overflow-hidden">
               <img
                 src={b.img}
                 alt={b.judul}
                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 loading="lazy"
               />
-            ) : (
-              <div class="w-full h-full" style="background: linear-gradient(135deg, #0E4A6E 0%, #0E9AA7 60%, #3FB5BF 100%);"></div>
-            )}
-          </div>
+            </div>
+          )}
           <div class="p-5">
             <time class="text-xs font-heading font-semibold text-muted">
               {b.published_at ? formatTanggal(b.published_at) : ''}

@@ -10,10 +10,11 @@ export const POST: APIRoute = async ({ request, redirect }) => {
   const nama = (fd.get('nama') as string)?.trim();
   const jabatan = (fd.get('jabatan') as string)?.trim();
   const urutan = Number(fd.get('urutan')) || 0;
+  const level = Number(fd.get('level')) || 3;
 
   if (!env || !nama || !jabatan) return redirect('/admin/perangkat?error=1');
 
-  await upsertPerangkat({ id: idRaw ? Number(idRaw) : undefined, nama, jabatan, urutan }, env.DB);
+  await upsertPerangkat({ id: idRaw ? Number(idRaw) : undefined, nama, jabatan, urutan, level }, env.DB);
   await purgeCache(['/pemerintahan']);
   return redirect('/admin/perangkat?saved=1');
 };

@@ -95,7 +95,10 @@ const inputStyle = 'border-color:var(--color-border); min-height:40px;';
         </div>
 
         <div>
-          <h3 class="font-heading font-semibold text-sm mb-2">Penduduk per Dusun</h3>
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-heading font-semibold text-sm">Penduduk per Dusun</h3>
+            <button type="button" id="btn-add-dusun" class="text-xs font-heading font-semibold text-accent hover:underline cursor-pointer">+ Tambah Dusun</button>
+          </div>
           <div class="overflow-x-auto">
             <table class="w-full text-sm">
               <thead>
@@ -105,18 +108,22 @@ const inputStyle = 'border-color:var(--color-border); min-height:40px;';
                   <th class="pb-1 pr-2">Jml RW</th>
                   <th class="pb-1 pr-2">Laki-laki</th>
                   <th class="pb-1 pr-2">Perempuan</th>
-                  <th class="pb-1">KK</th>
+                  <th class="pb-1 pr-2">KK</th>
+                  <th class="pb-1 text-center w-10">Aksi</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody id="container-dusun">
                 {dusun.map((d: any) => (
-                  <tr>
-                    <td class="pr-2 py-1"><input type="text" name="dusun_label" value={d.label} class={inputCls} style={inputStyle} /></td>
-                    <td class="pr-2 py-1"><input type="text" name="dusun_rw" value={d.rw} class={inputCls} style={inputStyle} /></td>
-                    <td class="pr-2 py-1 w-20"><input type="number" name="dusun_jmlRw" value={d.jmlRw} class={inputCls} style={inputStyle} /></td>
-                    <td class="pr-2 py-1"><input type="number" name="dusun_l" value={d.l} class={inputCls} style={inputStyle} /></td>
-                    <td class="pr-2 py-1"><input type="number" name="dusun_p" value={d.p} class={inputCls} style={inputStyle} /></td>
-                    <td class="py-1"><input type="number" name="dusun_kk" value={d.kk} class={inputCls} style={inputStyle} /></td>
+                  <tr class="item-row">
+                    <td class="pr-2 py-1"><input type="text" name="dusun_label" value={d.label} class={inputCls} style={inputStyle} required /></td>
+                    <td class="pr-2 py-1"><input type="text" name="dusun_rw" value={d.rw} class={inputCls} style={inputStyle} required /></td>
+                    <td class="pr-2 py-1 w-20"><input type="number" name="dusun_jmlRw" value={d.jmlRw} class={inputCls} style={inputStyle} required /></td>
+                    <td class="pr-2 py-1"><input type="number" name="dusun_l" value={d.l} class={inputCls} style={inputStyle} required /></td>
+                    <td class="pr-2 py-1"><input type="number" name="dusun_p" value={d.p} class={inputCls} style={inputStyle} required /></td>
+                    <td class="pr-2 py-1"><input type="number" name="dusun_kk" value={d.kk} class={inputCls} style={inputStyle} required /></td>
+                    <td class="py-1 text-center">
+                      <button type="button" class="btn-delete text-red-500 hover:text-red-700 text-xs font-semibold cursor-pointer">Hapus</button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -125,36 +132,48 @@ const inputStyle = 'border-color:var(--color-border); min-height:40px;';
         </div>
 
         <div>
-          <h3 class="font-heading font-semibold text-sm mb-2">Golongan Umur</h3>
-          <div class="space-y-2">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-heading font-semibold text-sm">Golongan Umur</h3>
+            <button type="button" id="btn-add-umur" class="text-xs font-heading font-semibold text-accent hover:underline cursor-pointer">+ Tambah Kelompok Umur</button>
+          </div>
+          <div class="space-y-2" id="container-umur">
             {umur.map((u: any) => (
-              <div class="grid grid-cols-3 gap-2">
-                <input type="text" name="umur_label" value={u.label} class={`${inputCls} col-span-2`} style={inputStyle} />
-                <input type="number" name="umur_value" value={u.value} class={inputCls} style={inputStyle} />
+              <div class="grid grid-cols-[1fr_1fr_60px] gap-2 items-center item-row">
+                <input type="text" name="umur_label" value={u.label} class={inputCls} style={inputStyle} required />
+                <input type="number" name="umur_value" value={u.value} class={inputCls} style={inputStyle} required />
+                <button type="button" class="btn-delete text-red-500 hover:text-red-700 text-xs font-semibold cursor-pointer">Hapus</button>
               </div>
             ))}
           </div>
         </div>
 
         <div>
-          <h3 class="font-heading font-semibold text-sm mb-2">Tingkat Pendidikan</h3>
-          <div class="space-y-2">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-heading font-semibold text-sm">Tingkat Pendidikan</h3>
+            <button type="button" id="btn-add-pendidikan" class="text-xs font-heading font-semibold text-accent hover:underline cursor-pointer">+ Tambah Pendidikan</button>
+          </div>
+          <div class="space-y-2" id="container-pendidikan">
             {pendidikan.map((p: any) => (
-              <div class="grid grid-cols-3 gap-2">
-                <input type="text" name="pendidikan_label" value={p.label} class={`${inputCls} col-span-2`} style={inputStyle} />
-                <input type="number" name="pendidikan_value" value={p.value} class={inputCls} style={inputStyle} />
+              <div class="grid grid-cols-[1fr_1fr_60px] gap-2 items-center item-row">
+                <input type="text" name="pendidikan_label" value={p.label} class={inputCls} style={inputStyle} required />
+                <input type="number" name="pendidikan_value" value={p.value} class={inputCls} style={inputStyle} required />
+                <button type="button" class="btn-delete text-red-500 hover:text-red-700 text-xs font-semibold cursor-pointer">Hapus</button>
               </div>
             ))}
           </div>
         </div>
 
         <div>
-          <h3 class="font-heading font-semibold text-sm mb-2">Mata Pencaharian</h3>
-          <div class="space-y-2">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-heading font-semibold text-sm">Mata Pencaharian</h3>
+            <button type="button" id="btn-add-pencaharian" class="text-xs font-heading font-semibold text-accent hover:underline cursor-pointer">+ Tambah Pencaharian</button>
+          </div>
+          <div class="space-y-2" id="container-pencaharian">
             {pencaharian.map((p: any) => (
-              <div class="grid grid-cols-3 gap-2">
-                <input type="text" name="pencaharian_label" value={p.label} class={`${inputCls} col-span-2`} style={inputStyle} />
-                <input type="number" name="pencaharian_value" value={p.value} class={inputCls} style={inputStyle} />
+              <div class="grid grid-cols-[1fr_1fr_60px] gap-2 items-center item-row">
+                <input type="text" name="pencaharian_label" value={p.label} class={inputCls} style={inputStyle} required />
+                <input type="number" name="pencaharian_value" value={p.value} class={inputCls} style={inputStyle} required />
+                <button type="button" class="btn-delete text-red-500 hover:text-red-700 text-xs font-semibold cursor-pointer">Hapus</button>
               </div>
             ))}
           </div>
@@ -169,3 +188,83 @@ const inputStyle = 'border-color:var(--color-border); min-height:40px;';
   </div>
 
 </AdminLayout>
+
+<script is:inline>
+  document.addEventListener('DOMContentLoaded', () => {
+    const inputCls = 'w-full rounded-lg border px-3 py-2 text-sm focus:outline-none';
+    const inputStyle = 'border-color:var(--color-border); min-height:40px;';
+
+    // Helper untuk hapus baris
+    document.addEventListener('click', (e) => {
+      if (e.target && e.target.classList.contains('btn-delete')) {
+        const row = e.target.closest('.item-row');
+        if (row) {
+          row.remove();
+        }
+      }
+    });
+
+    // Tambah Dusun
+    const btnAddDusun = document.getElementById('btn-add-dusun');
+    const containerDusun = document.getElementById('container-dusun');
+    btnAddDusun?.addEventListener('click', () => {
+      const tr = document.createElement('tr');
+      tr.className = 'item-row';
+      tr.innerHTML = `
+        <td class="pr-2 py-1"><input type="text" name="dusun_label" class="${inputCls}" style="${inputStyle}" required /></td>
+        <td class="pr-2 py-1"><input type="text" name="dusun_rw" class="${inputCls}" style="${inputStyle}" required /></td>
+        <td class="pr-2 py-1 w-20"><input type="number" name="dusun_jmlRw" class="${inputCls}" style="${inputStyle}" required /></td>
+        <td class="pr-2 py-1"><input type="number" name="dusun_l" class="${inputCls}" style="${inputStyle}" required /></td>
+        <td class="pr-2 py-1"><input type="number" name="dusun_p" class="${inputCls}" style="${inputStyle}" required /></td>
+        <td class="pr-2 py-1"><input type="number" name="dusun_kk" class="${inputCls}" style="${inputStyle}" required /></td>
+        <td class="py-1 text-center">
+          <button type="button" class="btn-delete text-red-500 hover:text-red-700 text-xs font-semibold cursor-pointer">Hapus</button>
+        </td>
+      `;
+      containerDusun?.appendChild(tr);
+    });
+
+    // Tambah Umur
+    const btnAddUmur = document.getElementById('btn-add-umur');
+    const containerUmur = document.getElementById('container-umur');
+    btnAddUmur?.addEventListener('click', () => {
+      const div = document.createElement('div');
+      div.className = 'grid grid-cols-[1fr_1fr_60px] gap-2 items-center item-row';
+      div.innerHTML = `
+        <input type="text" name="umur_label" class="${inputCls}" style="${inputStyle}" placeholder="Label kelompok" required />
+        <input type="number" name="umur_value" class="${inputCls}" style="${inputStyle}" placeholder="Jumlah" required />
+        <button type="button" class="btn-delete text-red-500 hover:text-red-700 text-xs font-semibold cursor-pointer">Hapus</button>
+      `;
+      containerUmur?.appendChild(div);
+    });
+
+    // Tambah Pendidikan
+    const btnAddPendidikan = document.getElementById('btn-add-pendidikan');
+    const containerPendidikan = document.getElementById('container-pendidikan');
+    btnAddPendidikan?.addEventListener('click', () => {
+      const div = document.createElement('div');
+      div.className = 'grid grid-cols-[1fr_1fr_60px] gap-2 items-center item-row';
+      div.innerHTML = `
+        <input type="text" name="pendidikan_label" class="${inputCls}" style="${inputStyle}" placeholder="Label pendidikan" required />
+        <input type="number" name="pendidikan_value" class="${inputCls}" style="${inputStyle}" placeholder="Jumlah" required />
+        <button type="button" class="btn-delete text-red-500 hover:text-red-700 text-xs font-semibold cursor-pointer">Hapus</button>
+      `;
+      containerPendidikan?.appendChild(div);
+    });
+
+    // Tambah Pencaharian
+    const btnAddPencaharian = document.getElementById('btn-add-pencaharian');
+    const containerPencaharian = document.getElementById('container-pencaharian');
+    btnAddPencaharian?.addEventListener('click', () => {
+      const div = document.createElement('div');
+      div.className = 'grid grid-cols-[1fr_1fr_60px] gap-2 items-center item-row';
+      div.innerHTML = `
+        <input type="text" name="pencaharian_label" class="${inputCls}" style="${inputStyle}" placeholder="Label pekerjaan" required />
+        <input type="number" name="pencaharian_value" class="${inputCls}" style="${inputStyle}" placeholder="Jumlah" required />
+        <button type="button" class="btn-delete text-red-500 hover:text-red-700 text-xs font-semibold cursor-pointer">Hapus</button>
+      `;
+      containerPencaharian?.appendChild(div);
+    });
+  });
+</script>
+
