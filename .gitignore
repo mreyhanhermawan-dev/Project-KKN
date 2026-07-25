@@ -9,6 +9,7 @@ node_modules/
 
 # Astro build output and type cache
 dist/
+dist2/
 .astro/
 
 # Wrangler local state (D1/R2/KV emulation) — never commit

@@ -15,8 +15,7 @@ for (const t of titikList) {
 // Titik peta diisi lewat panel admin setelah pengambilan koordinat GPS di lapangan.
 // Koordinat di bawah bersifat perkiraan (fallback) sampai titik asli dimasukkan.
 const demoPoints = [
-  { jenis: 'wisata', label: 'Pantai Loji', lat: -7.0508, lng: 106.5444, linked_slug: 'pantai-loji', desc: 'Garis pantai ±4 km di tepi Samudra Hindia.' },
-  { jenis: 'potensi', label: 'Kantor Kelurahan Palabuhanratu', lat: -6.9873, lng: 106.6539, linked_slug: 'profil', desc: 'Pusat pemerintahan Kelurahan Palabuhanratu, Kp. Cipatuguran.' },
+  { jenis: 'pemerintahan', label: 'Kantor Kelurahan Palabuhanratu', lat: -6.9873, lng: 106.5575, linked_slug: 'profil', desc: 'Pusat pemerintahan Kelurahan Palabuhanratu, Kp. Cipatuguran.' },
 ];
 
 const finalPoints = titikList.length > 0 ? titikList : demoPoints;

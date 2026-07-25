@@ -1,18 +1,17 @@
 ---
 import Layout from '../../components/Layout.astro';
 import { getPublishedUmkm } from '../../lib/db/umkm';
+import { getPublishedProduk, formatRupiah } from '../../lib/db/produk';
 import { getCoversForType, mediaUrl } from '../../lib/db/media';
 import { getEnv } from '@lib/env';
 
 const env = getEnv();
-const [allUmkm, covers] = await Promise.all([
+const [allUmkm, allProduk, umkmCovers, productCovers] = await Promise.all([
   env ? getPublishedUmkm(env.DB) : [],
+  env ? getPublishedProduk(env.DB) : [],
   env ? getCoversForType('umkm', env.DB) : new Map(),
+  env ? getCoversForType('produk', env.DB) : new Map(),
 ]);
-
-// Direktori UMKM diisi lewat panel admin (hasil pendataan door-to-door DIGDAYA).
-// Kosong = tampilkan empty state, bukan data contoh.
-const demoUmkm: Array<{slug:string;nama:string;kategori:string;lokasi:string;img:string;wa_number:string|null;desc:string}> = [];
 
 const getUmkmImg = (slug: string) => {
   if (slug === 'kerajinan-bambu-loji') return '/images/kerajinan_bambu.png';
@@ -21,39 +20,81 @@ const getUmkmImg = (slug: string) => {
   return '/images/kerajinan_bambu.png';
 };
 
-const displayUmkm = allUmkm.length > 0
-  ? allUmkm.map(u => {
-      const cover = covers.get(u.id);
-      return { slug: u.slug, nama: u.nama, kategori: u.kategori, lokasi: u.lokasi ?? '', img: cover ? mediaUrl(cover) : getUmkmImg(u.slug), wa_number: u.wa_number ?? null, desc: '' };
-    })
-  : demoUmkm;
+const getProductImg = (pSlug: string, pId: number) => {
+  const pCover = productCovers.get(pId);
+  if (pCover) return mediaUrl(pCover);
+  if (pSlug.includes('lampion') || pSlug.includes('bambu') || pSlug.includes('anyaman')) return '/images/kerajinan_bambu.png';
+  if (pSlug.includes('ikan') || pSlug.includes('cumi') || pSlug.includes('bakar')) return '/images/ikan_bakar.png';
+  if (pSlug.includes('sayur') || pSlug.includes('bayam') || pSlug.includes('tomat')) return '/images/kebun_sayur.png';
+  return '/images/kerajinan_bambu.png';
+};
 
-const displayJson = JSON.stringify(displayUmkm);
-const totalCount = displayUmkm.length;
+const displayUmkm = allUmkm.map(u => {
+  const cover = umkmCovers.get(u.id);
+  const storeProductsCount = allProduk.filter(p => p.umkm_id === u.id).length;
+  return {
+    id: u.id,
+    slug: u.slug,
+    nama: u.nama,
+    kategori: u.kategori,
+    lokasi: u.lokasi ?? '',
+    img: cover ? mediaUrl(cover) : getUmkmImg(u.slug),
+    wa_number: u.wa_number ?? null,
+    productsCount: storeProductsCount,
+  };
+});
+
+const displayProduk = allProduk.map(p => {
+  return {
+    id: p.id,
+    slug: p.slug,
+    nama: p.nama,
+    harga: p.harga,
+    hargaFmt: formatRupiah(p.harga),
+    umkm_id: p.umkm_id,
+    umkm_nama: p.umkm_nama,
+    umkm_slug: p.umkm_slug,
+    kategori: p.umkm_kategori,
+    img: getProductImg(p.slug, p.id),
+  };
+});
+
+const displayUmkmJson = JSON.stringify(displayUmkm);
+const displayProdukJson = JSON.stringify(displayProduk);
 ---
 
 <Layout
-  title="Direktori UMKM | Kelurahan Palabuhanratu"
-  description="Direktori UMKM Kelurahan Palabuhanratu: temukan produk kuliner, kriya, jasa, dan hasil tani lokal beserta kontak langsung."
+  title="Direktori UMKM & Katalog Produk | Kelurahan Palabuhanratu"
+  description="Direktori UMKM dan Katalog Produk Kelurahan Palabuhanratu: temukan produk kuliner, kriya, jasa, dan hasil tani lokal beserta kontak langsung."
 >
 
-<!-- Sticky header with search/filter -->
+<!-- Sticky header with search & category filter -->
 <div id="filterbar" class="sticky top-16 z-30 bg-white border-b border-line shadow-[0_4px_12px_rgba(15,36,51,.08)]">
   <div class="mx-auto max-w-[1152px] px-4 sm:px-6 py-3">
     <div class="flex flex-col lg:flex-row lg:items-center gap-3">
-      <div class="relative lg:w-72 shrink-0">
-        <i data-lucide="search" class="w-5 h-5 text-muted absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-        <label for="umkm-search" class="sr-only">Cari UMKM berdasarkan nama</label>
-        <input id="umkm-search" type="search" placeholder="Cari nama UMKM…"
-          class="w-full pl-10 pr-3 py-2.5 min-h-[44px] text-base border border-line rounded-lg focus:border-accent focus:outline-none focus:ring-4 focus:ring-accent/25" />
+      <!-- Tab View Selector: Katalog Produk vs Toko UMKM -->
+      <div class="flex bg-sand p-1 rounded-lg border border-line shrink-0" role="tablist">
+        <button id="tab-produk" class="px-3.5 py-1.5 rounded-md text-xs font-heading font-bold transition-all bg-white text-primary shadow-sm" role="tab" aria-selected="true">
+          Katalog Produk ({displayProduk.length})
+        </button>
+        <button id="tab-toko" class="px-3.5 py-1.5 rounded-md text-xs font-heading font-bold transition-all text-ink hover:text-primary" role="tab" aria-selected="false">
+          Toko UMKM ({displayUmkm.length})
+        </button>
       </div>
-      <div class="flex flex-wrap gap-2" role="group" aria-label="Saring berdasarkan kategori">
+
+      <div class="relative lg:w-64 shrink-0">
+        <i data-lucide="search" class="w-5 h-5 text-muted absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+        <label for="umkm-search" class="sr-only">Cari produk atau nama UMKM</label>
+        <input id="umkm-search" type="search" placeholder="Cari nama produk / toko…"
+          class="w-full pl-10 pr-3 py-2 min-h-[40px] text-sm border border-line rounded-lg focus:border-accent focus:outline-none focus:ring-4 focus:ring-accent/25" />
+      </div>
+
+      <div class="flex flex-wrap gap-1.5" role="group" aria-label="Saring berdasarkan kategori">
         {['Semua', 'Kuliner', 'Kriya', 'Jasa', 'Hasil Tani'].map((cat, i) => (
           <button
             data-cat={cat.toLowerCase().replace(' ', '-')}
-            data-cat-label={cat}
             class:list={[
-              'chip-filter px-3.5 py-2 min-h-[40px] rounded-full text-sm font-heading font-semibold border-2 transition-colors',
+              'chip-filter px-3 py-1.5 min-h-[36px] rounded-full text-xs font-heading font-semibold border transition-colors',
               i === 0 ? 'border-primary bg-primary text-white is-active' : 'border-line text-ink hover:border-accent'
             ]}
           >
@@ -61,20 +102,21 @@ const totalCount = displayUmkm.length;
           </button>
         ))}
       </div>
-      <p id="count" class="text-sm text-muted lg:ml-auto shrink-0" aria-live="polite">Menampilkan {totalCount} UMKM</p>
+
+      <p id="count" class="text-xs text-muted lg:ml-auto shrink-0" aria-live="polite">Menampilkan {displayProduk.length} produk</p>
     </div>
   </div>
 </div>
 
 <main id="main">
-  <div class="mx-auto max-w-[1152px] px-4 sm:px-6 pt-4 pb-2">
+  <div class="mx-auto max-w-[1152px] px-4 sm:px-6 pt-6 pb-2">
     <nav aria-label="Breadcrumb" class="text-sm text-muted flex items-center gap-1.5">
       <a href="/" class="hover:text-accent">Beranda</a>
       <i data-lucide="chevron-right" class="w-4 h-4"></i>
-      <span class="text-ink font-medium">Direktori UMKM</span>
+      <span class="text-ink font-medium">Direktori UMKM & Katalog</span>
     </nav>
-    <h1 class="text-3xl sm:text-4xl font-heading font-extrabold text-primary mt-2">Direktori UMKM</h1>
-    <p class="text-muted text-lg mt-2 max-w-2xl">Produk lokal dari pelaku usaha Kelurahan Palabuhanratu. Temukan, lihat detail, lalu hubungi langsung.</p>
+    <h1 class="text-3xl sm:text-4xl font-heading font-extrabold text-primary mt-2">Direktori UMKM & Katalog Produk</h1>
+    <p class="text-muted text-base mt-1 max-w-2xl">Jelajahi produk lokal unggulan dari pelaku usaha Kelurahan Palabuhanratu. Pilih produk untuk melihat katalog toko selengkapnya.</p>
   </div>
 
   <div class="mx-auto max-w-[1152px] px-4 sm:px-6 py-6">
@@ -84,9 +126,9 @@ const totalCount = displayUmkm.length;
       <div class="w-14 h-14 mx-auto rounded-full bg-sand grid place-items-center">
         <i data-lucide="search-x" class="w-7 h-7 text-primary"></i>
       </div>
-      <h2 class="font-heading font-bold text-xl text-ink mt-4">UMKM tidak ditemukan</h2>
+      <h2 class="font-heading font-bold text-xl text-ink mt-4">Data tidak ditemukan</h2>
       <p class="text-muted mt-1">Coba kata kunci lain atau ganti kategori.</p>
-      <button id="reset" class="mt-4 inline-flex items-center gap-2 border-2 border-primary text-primary font-heading font-semibold px-4 py-2.5 rounded-lg hover:bg-primary hover:text-white transition-colors min-h-[44px]">
+      <button id="reset" class="mt-4 inline-flex items-center gap-2 border-2 border-primary text-primary font-heading font-semibold px-4 py-2 rounded-lg hover:bg-primary hover:text-white transition-colors min-h-[40px] text-sm">
         <i data-lucide="rotate-ccw" class="w-4 h-4"></i> Reset filter
       </button>
     </div>
@@ -95,53 +137,116 @@ const totalCount = displayUmkm.length;
 
 </Layout>
 
-<script define:vars={{ displayJson }}>
-  const UMKM = JSON.parse(displayJson);
-  const CAT_MAP = { 'kuliner': 'Kuliner', 'kriya': 'Kriya', 'jasa': 'Jasa', 'hasil-tani': 'Hasil Tani', 'semua': 'Semua' };
+<script define:vars={{ displayUmkmJson, displayProdukJson }}>
+  const UMKM = JSON.parse(displayUmkmJson);
+  const PRODUK = JSON.parse(displayProdukJson);
   const TAG_COLOR = { 'Kuliner': 'bg-orange-100 text-orange-700', 'Kriya': 'bg-purple-100 text-purple-700', 'Jasa': 'bg-blue-100 text-blue-700', 'Hasil Tani': 'bg-green-100 text-green-700', 'default': 'bg-sand text-primary' };
 
-  let activeCat = 'semua', query = '';
+  let currentMode = 'produk'; // 'produk' | 'toko'
+  let activeCat = 'semua';
+  let query = '';
+
   const grid = document.getElementById('grid');
   const countEl = document.getElementById('count');
   const emptyEl = document.getElementById('empty');
+  const tabProduk = document.getElementById('tab-produk');
+  const tabToko = document.getElementById('tab-toko');
 
-  function cardHTML(u) {
-    const tagColor = TAG_COLOR[u.kategori] ?? TAG_COLOR['default'];
-    const imgHTML = u.img
-      ? `<img src="${u.img}" alt="${u.nama}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />`
-      : `<div class="w-full h-full" style="background: linear-gradient(135deg, #0E4A6E, #0E9AA7);"></div>`;
-    const contactHTML = u.wa_number
-      ? `<a href="https://wa.me/${u.wa_number}" target="_blank" rel="noopener noreferrer" class="mt-3 inline-flex items-center justify-center gap-2 w-full bg-cta hover:bg-ctaDark text-white text-sm font-heading font-semibold py-2.5 rounded-lg transition-colors min-h-[44px]"><i data-lucide="message-circle" class="w-4 h-4"></i> WhatsApp</a>`
-      : `<a href="/umkm/${u.slug}" class="mt-3 inline-flex items-center justify-center gap-2 w-full border-2 border-primary text-primary hover:bg-primary hover:text-white text-sm font-heading font-semibold py-2.5 rounded-lg transition-colors min-h-[44px]"><i data-lucide="phone" class="w-4 h-4"></i> Kontak</a>`;
-    const locHTML = u.lokasi ? `<p class="text-xs text-muted mt-1 flex items-center gap-1"><i data-lucide="map-pin" class="w-3.5 h-3.5"></i> ${u.lokasi}</p>` : '';
-    const descHTML = u.desc ? `<p class="text-sm text-muted mt-1 flex-1 line-clamp-2">${u.desc}</p>` : '';
-    return `<article class="umkm-card group bg-white border border-line rounded-xl overflow-hidden shadow-[0_4px_10px_rgba(15,36,51,.08)] hover:shadow-[0_12px_24px_rgba(15,36,51,.12)] hover:border-accent transition-all flex flex-col" data-name="${u.nama.toLowerCase()}" data-cat="${(u.kategori ?? '').toLowerCase()}">
-      <a href="/umkm/${u.slug}" class="block aspect-[16/10] overflow-hidden">${imgHTML}</a>
-      <div class="p-4 flex flex-col flex-1">
-        <span class="text-[13px] font-heading font-semibold px-2.5 py-1 rounded-full w-max ${tagColor}">${u.kategori}</span>
-        <h3 class="font-heading font-semibold text-ink mt-2"><a href="/umkm/${u.slug}" class="hover:text-primary">${u.nama}</a></h3>
-        ${locHTML}${descHTML}
-        <div class="mt-2">
-          <a href="/umkm/${u.slug}" class="text-sm font-heading font-semibold text-accent hover:underline">Lihat Detail</a>
+  function produkCardHTML(p) {
+    const tagColor = TAG_COLOR[p.kategori] ?? TAG_COLOR['default'];
+    return `<article class="group bg-white border border-line rounded-xl overflow-hidden shadow-[0_4px_10px_rgba(15,36,51,.08)] hover:shadow-[0_12px_24px_rgba(15,36,51,.12)] hover:border-accent transition-all flex flex-col">
+      <a href="/produk/${p.slug}" class="block aspect-[16/10] overflow-hidden bg-sand">
+        <img src="${p.img}" alt="${p.nama}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+      </a>
+      <div class="p-4 flex flex-col flex-1 justify-between">
+        <div>
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-[12px] font-heading font-semibold px-2 py-0.5 rounded-full ${tagColor}">${p.kategori}</span>
+            <span class="font-heading font-bold text-accent text-sm">${p.hargaFmt}</span>
+          </div>
+          <h3 class="font-heading font-bold text-ink text-base mt-2 hover:text-primary">
+            <a href="/produk/${p.slug}">${p.nama}</a>
+          </h3>
+          <p class="text-xs text-muted mt-1">Toko: <a href="/umkm/${p.umkm_slug}" class="text-primary hover:underline font-medium">${p.umkm_nama}</a></p>
         </div>
-        ${contactHTML}
+        <div class="mt-4 pt-3 border-t border-line flex items-center justify-between gap-2">
+          <a href="/produk/${p.slug}" class="w-full text-center bg-sand hover:bg-primary hover:text-white text-primary text-xs font-heading font-semibold py-2 rounded-lg transition-colors min-h-[38px] flex items-center justify-center">
+            Lihat Detail Produk
+          </a>
+        </div>
+      </div>
+    </article>`;
+  }
+
+  function storeCardHTML(u) {
+    const tagColor = TAG_COLOR[u.kategori] ?? TAG_COLOR['default'];
+    const locHTML = u.lokasi ? `<p class="text-xs text-muted mt-1 flex items-center gap-1"><i data-lucide="map-pin" class="w-3.5 h-3.5"></i> ${u.lokasi}</p>` : '';
+    return `<article class="group bg-white border border-line rounded-xl overflow-hidden shadow-[0_4px_10px_rgba(15,36,51,.08)] hover:shadow-[0_12px_24px_rgba(15,36,51,.12)] hover:border-accent transition-all flex flex-col">
+      <a href="/umkm/${u.slug}" class="block aspect-[16/10] overflow-hidden bg-sand">
+        <img src="${u.img}" alt="${u.nama}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+      </a>
+      <div class="p-4 flex flex-col flex-1 justify-between">
+        <div>
+          <div class="flex items-center justify-between">
+            <span class="text-[12px] font-heading font-semibold px-2.5 py-0.5 rounded-full ${tagColor}">${u.kategori}</span>
+            <span class="text-xs text-muted font-medium bg-sand px-2 py-0.5 rounded-md">${u.productsCount} Produk</span>
+          </div>
+          <h3 class="font-heading font-bold text-ink mt-2 text-base"><a href="/umkm/${u.slug}" class="hover:text-primary">${u.nama}</a></h3>
+          ${locHTML}
+        </div>
+        <div class="mt-4 pt-3 border-t border-line">
+          <a href="/umkm/${u.slug}" class="w-full text-center border-2 border-primary text-primary hover:bg-primary hover:text-white text-xs font-heading font-semibold py-2 rounded-lg transition-colors min-h-[38px] flex items-center justify-center">
+            Kunjungi Profil & Katalog Toko
+          </a>
+        </div>
       </div>
     </article>`;
   }
 
   function render() {
-    const list = UMKM.filter(u => {
-      const cat = (u.kategori ?? '').toLowerCase();
-      const matchCat = activeCat === 'semua' || cat === activeCat || (activeCat === 'hasil-tani' && cat.includes('tani'));
-      const matchQ = !query || u.nama.toLowerCase().includes(query);
-      return matchCat && matchQ;
-    });
-    grid.innerHTML = list.map(cardHTML).join('');
-    countEl.textContent = `Menampilkan ${list.length} UMKM`;
-    emptyEl.classList.toggle('hidden', list.length > 0);
-    grid.classList.toggle('hidden', list.length === 0);
+    if (currentMode === 'produk') {
+      const list = PRODUK.filter(p => {
+        const cat = (p.kategori ?? '').toLowerCase();
+        const matchCat = activeCat === 'semua' || cat === activeCat || (activeCat === 'hasil-tani' && cat.includes('tani'));
+        const matchQ = !query || p.nama.toLowerCase().includes(query) || p.umkm_nama.toLowerCase().includes(query);
+        return matchCat && matchQ;
+      });
+      grid.innerHTML = list.map(produkCardHTML).join('');
+      countEl.textContent = `Menampilkan ${list.length} produk`;
+      emptyEl.classList.toggle('hidden', list.length > 0);
+      grid.classList.toggle('hidden', list.length === 0);
+    } else {
+      const list = UMKM.filter(u => {
+        const cat = (u.kategori ?? '').toLowerCase();
+        const matchCat = activeCat === 'semua' || cat === activeCat || (activeCat === 'hasil-tani' && cat.includes('tani'));
+        const matchQ = !query || u.nama.toLowerCase().includes(query);
+        return matchCat && matchQ;
+      });
+      grid.innerHTML = list.map(storeCardHTML).join('');
+      countEl.textContent = `Menampilkan ${list.length} toko UMKM`;
+      emptyEl.classList.toggle('hidden', list.length > 0);
+      grid.classList.toggle('hidden', list.length === 0);
+    }
     if (typeof lucide !== 'undefined') lucide.createIcons();
   }
+
+  tabProduk.addEventListener('click', () => {
+    currentMode = 'produk';
+    tabProduk.classList.add('bg-white', 'text-primary', 'shadow-sm');
+    tabProduk.classList.remove('text-ink');
+    tabToko.classList.remove('bg-white', 'text-primary', 'shadow-sm');
+    tabToko.classList.add('text-ink');
+    render();
+  });
+
+  tabToko.addEventListener('click', () => {
+    currentMode = 'toko';
+    tabToko.classList.add('bg-white', 'text-primary', 'shadow-sm');
+    tabToko.classList.remove('text-ink');
+    tabProduk.classList.remove('bg-white', 'text-primary', 'shadow-sm');
+    tabProduk.classList.add('text-ink');
+    render();
+  });
 
   document.getElementById('umkm-search').addEventListener('input', e => { query = e.target.value.trim().toLowerCase(); render(); });
 

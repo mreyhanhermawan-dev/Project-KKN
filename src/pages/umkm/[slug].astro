@@ -1,25 +1,40 @@
 ---
 import Layout from '../../components/Layout.astro';
 import { getUmkmBySlug } from '../../lib/db/umkm';
-import { getMediaForEntity } from '../../lib/db/media';
+import { getProdukByUmkmId, formatRupiah } from '../../lib/db/produk';
+import { getMediaForEntity, getCoversForType, mediaUrl } from '../../lib/db/media';
+import { getEnv } from '@lib/env';
+import { SITE_URL } from '@lib/site';
 
 const { slug } = Astro.params as { slug: string };
-import { getEnv } from '@lib/env';
 const env = getEnv();
 
 const umkm = env ? await getUmkmBySlug(slug, env.DB) : null;
 if (!umkm) return Astro.redirect('/404');
 
-const mediaList = env ? await getMediaForEntity('umkm', umkm.id, env.DB) : [];
+const [mediaList, products, productCovers] = await Promise.all([
+  env ? getMediaForEntity('umkm', umkm.id, env.DB) : [],
+  env ? getProdukByUmkmId(umkm.id, env.DB) : [],
+  env ? getCoversForType('produk', env.DB) : new Map(),
+]);
+
 const cover = mediaList[0];
-import { SITE_URL } from '@lib/site';
 const canonicalUrl = new URL(`/umkm/${slug}`, Astro.site ?? SITE_URL).href;
+
+const getProductImg = (pSlug: string, pId: number) => {
+  const pCover = productCovers.get(pId);
+  if (pCover) return mediaUrl(pCover);
+  if (pSlug.includes('lampion') || pSlug.includes('bambu') || pSlug.includes('anyaman')) return '/images/kerajinan_bambu.png';
+  if (pSlug.includes('ikan') || pSlug.includes('cumi') || pSlug.includes('bakar')) return '/images/ikan_bakar.png';
+  if (pSlug.includes('sayur') || pSlug.includes('bayam') || pSlug.includes('tomat')) return '/images/kebun_sayur.png';
+  return cover ? mediaUrl(cover) : '/images/kerajinan_bambu.png';
+};
 ---
 
 <Layout
   title={`${umkm.nama} | UMKM Kelurahan Palabuhanratu`}
   description={`${umkm.nama} · ${umkm.kategori} · ${umkm.lokasi ?? 'Kelurahan Palabuhanratu'}`}
-  ogImage={cover ? `/api/media/${encodeURIComponent(cover.r2_key_display)}` : undefined}
+  ogImage={cover ? mediaUrl(cover) : undefined}
 >
 
   <!-- Header -->
@@ -38,23 +53,23 @@ const canonicalUrl = new URL(`/umkm/${slug}`, Astro.site ?? SITE_URL).href;
   <div class="mx-auto max-w-6xl px-4 md:px-6 py-10">
     <div class="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-10">
 
-      <!-- Left: gallery + description + location -->
-      <div>
+      <!-- Left: gallery + description + location + product catalog -->
+      <div class="space-y-8">
         <!-- Cover image -->
         {cover ? (
-          <div class="aspect-[16/10] rounded-xl overflow-hidden mb-6 border border-border" style="box-shadow:var(--shadow-md);">
-            <img src={`/api/media/${encodeURIComponent(cover.r2_key_display)}`} alt={cover.alt}
+          <div class="aspect-[16/10] rounded-xl overflow-hidden border border-border" style="box-shadow:var(--shadow-md);">
+            <img src={mediaUrl(cover)} alt={cover.alt}
               class="w-full h-full object-cover" loading="lazy" />
           </div>
         ) : (
-          <div class="aspect-[16/10] rounded-xl overflow-hidden mb-6 flex items-center justify-center" style="background:var(--color-sand);">
+          <div class="aspect-[16/10] rounded-xl overflow-hidden flex items-center justify-center" style="background:var(--color-sand);">
             <span class="font-heading font-bold text-6xl" style="color:var(--color-primary); opacity:.2;">{umkm.nama[0]}</span>
           </div>
         )}
 
         <!-- Gallery -->
         {mediaList.length > 1 && (
-          <div class="grid grid-cols-3 gap-2 mb-6">
+          <div class="grid grid-cols-3 gap-2">
             {mediaList.slice(1, 7).map(m => (
               <div class="aspect-square rounded-lg overflow-hidden border border-border">
                 <img src={`/api/media/${encodeURIComponent(m.r2_key_thumb)}`} alt={m.alt}
@@ -65,7 +80,49 @@ const canonicalUrl = new URL(`/umkm/${slug}`, Astro.site ?? SITE_URL).href;
         )}
 
         <!-- Description -->
-        <div class="prose max-w-none mb-6" set:html={umkm.deskripsi_html} />
+        <div class="bg-white rounded-2xl p-6 border border-border shadow-sm">
+          <h2 class="font-heading font-bold text-xl mb-3 text-primary">Tentang {umkm.nama}</h2>
+          <div class="prose max-w-none text-text-muted leading-relaxed" set:html={umkm.deskripsi_html} />
+        </div>
+
+        <!-- KATALOG PRODUK TOKO -->
+        <div class="bg-white rounded-2xl p-6 border border-border shadow-sm">
+          <div class="flex items-center justify-between mb-6 pb-3 border-b border-border">
+            <div>
+              <h2 class="font-heading font-bold text-xl text-primary">Katalog Produk Toko</h2>
+              <p class="text-xs text-text-muted mt-0.5">Daftar seluruh produk yang dijual oleh {umkm.nama} ({products.length} produk)</p>
+            </div>
+          </div>
+
+          {products.length === 0 ? (
+            <div class="p-8 text-center text-text-muted bg-sand/30 rounded-xl">
+              Belum ada katalog produk yang dipublikasikan untuk toko ini.
+            </div>
+          ) : (
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              {products.map(p => (
+                <div class="group bg-white border border-border rounded-xl overflow-hidden shadow-sm hover:shadow-md hover:border-accent transition-all flex flex-col">
+                  <a href={`/produk/${p.slug}`} class="block aspect-[16/10] overflow-hidden bg-sand">
+                    <img src={getProductImg(p.slug, p.id)} alt={p.nama}
+                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                  </a>
+                  <div class="p-4 flex flex-col flex-1 justify-between">
+                    <div>
+                      <h3 class="font-heading font-semibold text-text text-base group-hover:text-primary transition-colors">
+                        <a href={`/produk/${p.slug}`}>{p.nama}</a>
+                      </h3>
+                      <p class="font-bold text-accent text-sm mt-1">{formatRupiah(p.harga)}</p>
+                    </div>
+                    <a href={`/produk/${p.slug}`}
+                      class="mt-4 text-xs font-heading font-semibold text-center text-primary bg-sand hover:bg-primary hover:text-white py-2.5 px-3 rounded-lg transition-colors min-h-[40px] flex items-center justify-center">
+                      Lihat Detail Produk →
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         <!-- Location -->
         {umkm.lokasi && (

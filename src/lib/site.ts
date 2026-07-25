@@ -1,9 +1,9 @@
-// Identitas situs. Satu-satunya tempat mengganti domain/nama desa
+// Identitas situs. Satu-satunya tempat mengganti domain/nama kelurahan
 // (selain `site` di astro.config.mjs, lihat README bagian "untuk desa lain").
-export const SITE_URL = 'https://loji.web.id';
-export const SITE_NAME = 'Desa Loji';
+export const SITE_URL = 'https://palabuhanratu.web.id';
+export const SITE_NAME = 'Kelurahan Palabuhanratu';
 export const SITE_DESCRIPTION =
-  'Situs resmi Pemerintah Desa Loji, Kecamatan Simpenan, Kabupaten Sukabumi. Informasi profil desa, wisata pantai dan Geopark Ciletuh, UMKM, serta berita desa.';
+  'Situs resmi Pemerintah Kelurahan Palabuhanratu, Kecamatan Palabuhanratu, Kabupaten Sukabumi. Informasi profil desa, wisata pantai dan Geopark Ciletuh, UMKM, serta berita desa.';
 
 // Google Search Console — verifikasi metode "HTML tag" (URL prefix).
 // Tempel HANYA nilai token dari Search Console (isi atribut content="..."),

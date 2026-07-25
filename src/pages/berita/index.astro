@@ -1,114 +1,1074 @@
 ---
-import Layout from '../../components/Layout.astro';
-import { getPublishedBerita, formatTanggal, excerpt } from '../../lib/db/berita';
-import { getCoversForType, mediaUrl } from '../../lib/db/media';
-import { getEnv } from '@lib/env';
+import Layout from "../../components/Layout.astro";
+import {
+    getPublishedBerita,
+    formatTanggal,
+    excerpt,
+} from "../../lib/db/berita";
+import { getCoversForType, mediaUrl } from "../../lib/db/media";
+import { getEnv } from "@lib/env";
 
 const env = getEnv();
 const [beritaList, covers] = await Promise.all([
-  env ? getPublishedBerita(env.DB) : [],
-  env ? getCoversForType('berita', env.DB) : new Map(),
+    env ? getPublishedBerita(env.DB) : [],
+    env ? getCoversForType("berita", env.DB) : new Map(),
 ]);
 
 const demoBerita = [
-  { slug: 'gotong-royong-bersih-pantai', judul: 'Gotong Royong Bersih Pantai Loji Menyambut Musim Kunjungan', published_at: '2026-07-12', content_html: '<p>Warga bersama Karang Taruna membersihkan pesisir Pantai Loji dalam rangka menyambut meningkatnya kunjungan wisatawan ke kawasan Geopark Ciletuh.</p>', featured: true, img: '/images/gotong_royong.png' },
-  { slug: 'pelatihan-digital-umkm', judul: 'Pelatihan Digital untuk UMKM Kelurahan Palabuhanratu', published_at: '2026-07-08', content_html: '<p>Sepuluh pelaku UMKM mengikuti pelatihan foto produk dan WhatsApp Business yang difasilitasi oleh Tim KKNT IPB.</p>', featured: false, img: '/images/pelatihan_umkm.png' },
-  { slug: 'peluncuran-situs-resmi', judul: 'Peluncuran Situs Resmi Kelurahan Palabuhanratu', published_at: '2026-07-01', content_html: '<p>Kelurahan Palabuhanratu kini punya kehadiran digital resmi yang dapat diakses siapa saja untuk mengeksplorasi potensi dan layanan kelurahan.</p>', featured: false, img: '/images/pelatihan_umkm.png' },
-  { slug: 'musyawarah-pengembangan-wisata', judul: 'Musyawarah Kelurahan Bahas Pengembangan Wisata', published_at: '2026-06-24', content_html: '<p>Perangkat kelurahan dan warga membahas rencana pengembangan kawasan Pantai Loji menjadi destinasi ekowisata terpadu.</p>', featured: false, img: '/images/gotong_royong.png' },
-  { slug: 'panen-raya-kopi', judul: 'Panen Raya Kopi Kebun Loji', published_at: '2026-06-18', content_html: '<p>Hasil panen kopi tahun ini meningkat dibanding musim sebelumnya berkat metode budidaya baru yang diterapkan petani setempat.</p>', featured: false, img: '/images/kebun_sayur.png' },
-  { slug: 'kerja-bakti-jalan-kelurahan', judul: 'Kerja Bakti Perbaikan Jalan Kelurahan', published_at: '2026-06-02', content_html: '<p>Warga bergotong royong memperbaiki ruas jalan menuju dermaga agar lebih nyaman dilalui nelayan dan wisatawan.</p>', featured: false, img: '/images/gotong_royong.png' },
+    {
+        slug: "gotong-royong-bersih-pantai",
+        judul: "Gotong Royong Bersih Pantai Menyambut Musim Kunjungan",
+        published_at: "2026-07-12",
+        content_html:
+            "<p>Warga bersama Karang Taruna membersihkan pesisir Pantai dalam rangka menyambut meningkatnya kunjungan wisatawan ke kawasan Geopark Ciletuh.</p>",
+        img: "/images/gotong_royong.png",
+    },
+    {
+        slug: "pelatihan-digital-umkm",
+        judul: "Pelatihan Digital untuk UMKM Kelurahan Palabuhanratu",
+        published_at: "2026-07-08",
+        content_html:
+            "<p>Sepuluh pelaku UMKM mengikuti pelatihan foto produk dan WhatsApp Business yang difasilitasi oleh Tim KKNT IPB.</p>",
+        img: "/images/pelatihan_umkm.png",
+    },
+    {
+        slug: "peluncuran-situs-resmi",
+        judul: "Peluncuran Situs Resmi Kelurahan Palabuhanratu",
+        published_at: "2026-07-01",
+        content_html:
+            "<p>Kelurahan Palabuhanratu kini punya kehadiran digital resmi yang dapat diakses siapa saja.</p>",
+        img: "/images/pelatihan_umkm.png",
+    },
+    {
+        slug: "musyawarah-pengembangan-wisata",
+        judul: "Musyawarah Kelurahan Bahas Pengembangan Wisata",
+        published_at: "2026-06-24",
+        content_html:
+            "<p>Perangkat kelurahan dan warga membahas rencana pengembangan kawasan Pantai menjadi destinasi ekowisata terpadu.</p>",
+        img: "/images/gotong_royong.png",
+    },
+    {
+        slug: "panen-raya-kopi",
+        judul: "Panen Raya Kopi Kebun",
+        published_at: "2026-06-18",
+        content_html:
+            "<p>Hasil panen kopi tahun ini meningkat berkat metode budidaya baru yang diterapkan petani setempat.</p>",
+        img: "/images/kebun_sayur.png",
+    },
+    {
+        slug: "kerja-bakti-jalan-kelurahan",
+        judul: "Kerja Bakti Perbaikan Jalan Kelurahan",
+        published_at: "2026-06-02",
+        content_html:
+            "<p>Warga bergotong royong memperbaiki ruas jalan menuju dermaga agar lebih nyaman dilalui nelayan dan wisatawan.</p>",
+        img: "/images/gotong_royong.png",
+    },
 ];
 
-const getBeritaImg = (i: number) => {
-  const imgs = ['/images/gotong_royong.png', '/images/pelatihan_umkm.png', '/images/pelatihan_umkm.png', '/images/gotong_royong.png', '/images/kebun_sayur.png', '/images/gotong_royong.png'];
-  return imgs[i % imgs.length];
-};
+const finalBerita =
+    beritaList.length > 0
+        ? beritaList.map((b, i) => {
+              const cover = covers.get(b.id);
+              return {
+                  slug: b.slug,
+                  judul: b.judul,
+                  published_at: b.published_at ?? "",
+                  content_html: b.content_html,
+                  img: cover ? mediaUrl(cover) : null,
+              };
+          })
+        : demoBerita;
 
-const finalBerita = beritaList.length > 0
-  ? beritaList.map((b, i) => {
-      const cover = covers.get(b.id);
-      return { slug: b.slug, judul: b.judul, published_at: b.published_at ?? '', content_html: b.content_html, featured: i === 0, img: cover ? mediaUrl(cover) : null };
-    })
-  : demoBerita;
+// Zona 1 – hero terbaru
+const heroBerita = finalBerita[0];
 
-const featuredBerita = finalBerita[0];
-const restBerita = finalBerita.slice(1);
+// Zona 2 – slider (maks 5 setelah hero, fallback ke seluruh list)
+const sliderBerita = (
+    finalBerita.length > 1 ? finalBerita.slice(1) : finalBerita
+).slice(0, 5);
+
+// Zona 3 – daftar sisanya (search + paginasi via JS)
+const lihatBerita = finalBerita.slice(1);
+
+// Kirim data ke client sebagai JSON
+const lihatJson = JSON.stringify(lihatBerita);
 ---
 
 <Layout
-  title="Berita | Kelurahan Palabuhanratu"
-  description="Berita dan pengumuman resmi terbaru dari Pemerintah Kelurahan Palabuhanratu, Kecamatan Simpenan, Kabupaten Sukabumi."
+    title="Berita | Kelurahan Palabuhanratu"
+    description="Berita dan pengumuman resmi terbaru dari Pemerintah Kelurahan Palabuhanratu, Kecamatan Palabuhanratu, Kabupaten Sukabumi."
 >
-
-<main id="main" class="mx-auto max-w-[1152px] px-4 sm:px-6 py-10">
-  <h1 class="text-3xl sm:text-4xl font-heading font-extrabold text-primary">Berita & Pengumuman</h1>
-  <p class="text-muted mt-2">Kabar terbaru dari Kelurahan Palabuhanratu.</p>
-
-  {/* Featured article */}
-  {featuredBerita && (
-    <a href={`/berita/${featuredBerita.slug}`}
-       class:list={[
-         "group gap-0 items-stretch bg-white border border-line rounded-2xl overflow-hidden shadow-[0_4px_10px_rgba(15,36,51,.08)] hover:shadow-[0_12px_24px_rgba(15,36,51,.12)] hover:border-accent transition-all mt-6",
-         featuredBerita.img ? "grid md:grid-cols-2" : "block"
-       ]}>
-      {featuredBerita.img && (
-        <div class="aspect-[16/10] md:aspect-auto overflow-hidden">
-          <img
-            src={featuredBerita.img}
-            alt={featuredBerita.judul}
-            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            loading="eager"
-          />
-        </div>
-      )}
-      <div class="p-6 sm:p-8 flex flex-col justify-center">
-        <span class="text-[13px] font-heading font-semibold px-2.5 py-1 rounded-full bg-[#E0F5F7] text-[#0A6B74] w-max">Terbaru</span>
-        <time class="text-sm text-muted mt-3">
-          {featuredBerita.published_at ? formatTanggal(featuredBerita.published_at) : ''}
-        </time>
-        <h2 class="font-heading font-extrabold text-2xl text-ink mt-1 group-hover:text-primary transition-colors leading-snug">
-          {featuredBerita.judul}
-        </h2>
-        <p class="text-muted mt-2 line-clamp-3">{excerpt(featuredBerita.content_html, 160)}</p>
-        <span class="inline-flex items-center gap-1.5 mt-4 text-accent font-heading font-semibold">
-          Baca selengkapnya <i data-lucide="arrow-right" class="w-4 h-4"></i>
-        </span>
-      </div>
-    </a>
-  )}
-
-  {/* Rest grid */}
-  {restBerita.length > 0 && (
-    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-      {restBerita.map(b => (
-        <a href={`/berita/${b.slug}`}
-           class="group block bg-white border border-line rounded-2xl overflow-hidden shadow-[0_4px_10px_rgba(15,36,51,.08)] hover:shadow-[0_12px_24px_rgba(15,36,51,.12)] hover:border-accent transition-all">
-          {b.img && (
-            <div class="aspect-[16/9] overflow-hidden">
-              <img src={b.img} alt={b.judul} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+    <!-- ═══════════════════════════════════════════
+     ZONA 1 – HERO BERITA UTAMA
+═══════════════════════════════════════════ -->
+    <section class="b-hero-section">
+        <div class="b-container">
+            <div class="b-page-hd">
+                <span class="b-chip">Berita &amp; Pengumuman</span>
+                <h1 class="b-page-title">
+                    Kabar Terbaru Kelurahan Palabuhanratu
+                </h1>
+                <p class="b-page-sub">
+                    Informasi resmi dan pengumuman dari Pemerintah Kelurahan
+                    Palabuhanratu.
+                </p>
             </div>
-          )}
-          <div class="p-5">
-            <time class="text-xs font-heading font-semibold text-muted">
-              {b.published_at ? formatTanggal(b.published_at) : ''}
-            </time>
-            <h3 class="font-heading font-semibold text-ink mt-1 group-hover:text-primary transition-colors leading-snug">{b.judul}</h3>
-            <p class="text-sm text-muted mt-1 line-clamp-2">{excerpt(b.content_html, 100)}</p>
-          </div>
-        </a>
-      ))}
-    </div>
-  )}
 
-  {finalBerita.length === 0 && (
-    <div class="text-center py-20">
-      <p class="font-heading font-medium text-lg text-muted">Belum ada berita. Kunjungi lagi nanti.</p>
-    </div>
-  )}
-</main>
+            {
+                heroBerita && (
+                    <a href={`/berita/${heroBerita.slug}`} class="b-hero-card">
+                        <div class="b-hero-img-wrap">
+                            {heroBerita.img ? (
+                                <img
+                                    src={heroBerita.img}
+                                    alt={heroBerita.judul}
+                                    class="b-hero-img"
+                                    loading="eager"
+                                />
+                            ) : (
+                                <div class="b-img-placeholder">
+                                    <svg
+                                        width="48"
+                                        height="48"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="#9acbfb"
+                                        stroke-width="1.5"
+                                    >
+                                        <rect
+                                            width="18"
+                                            height="18"
+                                            x="3"
+                                            y="3"
+                                            rx="2"
+                                        />
+                                        <path d="m3 9 5-5 4 4 3-3 6 6" />
+                                    </svg>
+                                </div>
+                            )}
+                            <span class="b-hero-badge">
+                                &#9733; Berita Utama
+                            </span>
+                        </div>
+                        <div class="b-hero-body">
+                            <time class="b-time">
+                                {heroBerita.published_at
+                                    ? formatTanggal(heroBerita.published_at)
+                                    : ""}
+                            </time>
+                            <h2 class="b-hero-title">{heroBerita.judul}</h2>
+                            <p class="b-hero-excerpt">
+                                {excerpt(heroBerita.content_html, 220)}
+                            </p>
+                            <span class="b-cta">Baca selengkapnya &rarr;</span>
+                        </div>
+                    </a>
+                )
+            }
+        </div>
+    </section>
 
+    <!-- ═══════════════════════════════════════════
+     ZONA 2 – SLIDER BERITA PILIHAN
+═══════════════════════════════════════════ -->
+    <section class="b-slider-section">
+        <div class="b-container">
+            <div class="b-section-hd">
+                <div>
+                    <span class="b-chip b-chip--alt">Pilihan Editor</span>
+                    <h2 class="b-section-title">Berita Populer</h2>
+                </div>
+                <div class="b-slider-nav">
+                    <button
+                        id="sl-prev"
+                        class="b-nav-btn"
+                        aria-label="Sebelumnya">&#8592;</button
+                    >
+                    <button
+                        id="sl-next"
+                        class="b-nav-btn"
+                        aria-label="Berikutnya">&#8594;</button
+                    >
+                </div>
+            </div>
+
+            <div class="b-slider-outer">
+                <div class="b-slider-track" id="sl-track">
+                    {
+                        sliderBerita.map((b, i) => (
+                            <a
+                                href={`/berita/${b.slug}`}
+                                class="b-sl-card"
+                                data-index={String(i)}
+                            >
+                                <div class="b-sl-img-wrap">
+                                    {b.img ? (
+                                        <img
+                                            src={b.img}
+                                            alt={b.judul}
+                                            class="b-sl-img"
+                                            loading="lazy"
+                                        />
+                                    ) : (
+                                        <div class="b-img-placeholder">
+                                            <svg
+                                                width="32"
+                                                height="32"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="#9acbfb"
+                                                stroke-width="1.5"
+                                            >
+                                                <rect
+                                                    width="18"
+                                                    height="18"
+                                                    x="3"
+                                                    y="3"
+                                                    rx="2"
+                                                />
+                                                <path d="m3 9 5-5 4 4 3-3 6 6" />
+                                            </svg>
+                                        </div>
+                                    )}
+                                </div>
+                                <div class="b-sl-body">
+                                    <time class="b-time">
+                                        {b.published_at
+                                            ? formatTanggal(b.published_at)
+                                            : ""}
+                                    </time>
+                                    <h3 class="b-sl-title">{b.judul}</h3>
+                                    <p class="b-sl-excerpt">
+                                        {excerpt(b.content_html, 80)}
+                                    </p>
+                                </div>
+                            </a>
+                        ))
+                    }
+                </div>
+            </div>
+
+            <div class="b-dots" id="sl-dots">
+                {
+                    sliderBerita.map((_, i) => (
+                        <button
+                            class={`b-dot${i === 0 ? " active" : ""}`}
+                            data-dot={String(i)}
+                            aria-label={`Slide ${i + 1}`}
+                        />
+                    ))
+                }
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════
+     ZONA 3 – DAFTAR + SEARCH + PAGINATION
+═══════════════════════════════════════════ -->
+    <section class="b-list-section">
+        <div class="b-container">
+            <div class="b-section-hd" style="margin-bottom:20px;">
+                <div>
+                    <span class="b-chip b-chip--neutral">Arsip</span>
+                    <h2 class="b-section-title">Berita Lainnya</h2>
+                </div>
+            </div>
+
+            <!-- Search & Filter -->
+            <div class="b-filter-bar">
+                <div class="b-search-wrap">
+                    <svg
+                        class="b-search-icon"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        ><circle cx="11" cy="11" r="8"></circle><path
+                            d="m21 21-4.35-4.35"></path></svg
+                    >
+                    <input
+                        type="search"
+                        id="b-search"
+                        placeholder="Cari berita..."
+                        class="b-search-input"
+                        autocomplete="off"
+                    />
+                </div>
+                <select id="b-filter" class="b-filter-sel">
+                    <option value="">Semua Kategori</option>
+                    <option value="gotong">Gotong Royong</option>
+                    <option value="pelatihan">Pelatihan</option>
+                    <option value="wisata">Wisata</option>
+                    <option value="panen">Pertanian</option>
+                    <option value="jalan">Infrastruktur</option>
+                </select>
+            </div>
+
+            <!-- List rendered by JS -->
+            <div id="b-list" class="b-list"></div>
+            <div id="b-empty" class="b-empty" hidden>
+                <p>Tidak ada berita yang cocok dengan pencarian.</p>
+            </div>
+
+            <!-- Pagination rendered by JS -->
+            <div id="b-pager" class="b-pager"></div>
+        </div>
+    </section>
 </Layout>
 
+<!-- Data island untuk JS -->
+<script id="b-data" type="application/json" set:text={lihatJson} />
+
+<style>
+    /* ── Token ─────────────────────────────── */
+    :root {
+        --b-primary: #003555;
+        --b-secondary: #006496;
+        --b-accent: #00a8b5;
+        --b-bg: #f4faff;
+        --b-surface: #ffffff;
+        --b-surf-low: #e9f5fe;
+        --b-surf-cnt: #e4f0f8;
+        --b-on-surf: #121d23;
+        --b-on-var: #41474e;
+        --b-outline: #72787f;
+        --b-outl-var: #c1c7cf;
+        --b-shadow: 0 4px 20px rgba(15, 76, 117, 0.08);
+        --b-shadow-hov: 0 12px 32px rgba(15, 76, 117, 0.15);
+        --b-r-card: 1rem;
+        --b-r-hero: 1.5rem;
+        --b-font: "Plus Jakarta Sans", "Lexend", sans-serif;
+    }
+
+    /* ── Sections ───────────────────────────── */
+    .b-hero-section {
+        background: var(--b-bg);
+        padding: 56px 0 0;
+    }
+    .b-slider-section {
+        background: var(--b-surf-cnt);
+        padding: 56px 0;
+        border-top: 1px solid var(--b-outl-var);
+        border-bottom: 1px solid var(--b-outl-var);
+    }
+    .b-list-section {
+        background: var(--b-bg);
+        padding: 56px 0 80px;
+    }
+
+    .b-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 24px;
+    }
+
+    /* ── Page header ────────────────────────── */
+    .b-page-hd {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+    .b-page-title {
+        font-family: var(--b-font);
+        font-size: clamp(24px, 4vw, 34px);
+        font-weight: 700;
+        line-height: 1.2;
+        color: var(--b-primary);
+        margin: 12px 0 10px;
+        letter-spacing: -0.01em;
+    }
+    .b-page-sub {
+        font-family: var(--b-font);
+        font-size: 16px;
+        color: var(--b-on-var);
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    /* ── Chip ───────────────────────────────── */
+    .b-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-family: var(--b-font);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: var(--b-accent);
+        background: var(--b-surf-cnt);
+        padding: 5px 12px;
+        border-radius: 9999px;
+        border: 1px solid rgba(0, 168, 181, 0.25);
+    }
+    .b-chip--alt {
+        color: var(--b-secondary);
+        background: var(--b-surf-low);
+        border-color: rgba(0, 100, 150, 0.2);
+    }
+    .b-chip--neutral {
+        color: var(--b-on-var);
+        background: #f0f4f8;
+        border-color: var(--b-outl-var);
+    }
+
+    /* ── Section heading row ────────────────── */
+    .b-section-hd {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 28px;
+    }
+    .b-section-title {
+        font-family: var(--b-font);
+        font-size: clamp(20px, 3vw, 26px);
+        font-weight: 700;
+        line-height: 1.25;
+        color: var(--b-primary);
+        margin: 8px 0 0;
+    }
+
+    /* ── Shared time ────────────────────────── */
+    .b-time {
+        font-family: var(--b-font);
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--b-outline);
+        letter-spacing: 0.01em;
+    }
+
+    /* ════════════════════════════════════════
+   ZONA 1 – HERO
+════════════════════════════════════════ */
+.b-hero-card {
+  display:flex; flex-direction:column;
+  max-width:640px; margin:0 auto 56px;
+  background:var(--b-surface);
+  border:1px solid var(--b-outl-var);
+  border-radius:var(--b-r-hero);
+  overflow:hidden;
+  box-shadow:var(--b-shadow);
+  text-decoration:none;
+  transition:box-shadow .25s,border-color .25s,transform .25s;
+}
+.b-hero-card:hover { box-shadow:var(--b-shadow-hov); border-color:var(--b-accent); transform:translateY(-3px); }
+
+.b-hero-img-wrap { position:relative; width:100%; aspect-ratio:16/9; overflow:hidden; background:var(--b-surf-cnt); }
+.b-hero-img      { width:100%; height:100%; object-fit:cover; display:block; transition:transform .5s; }
+.b-hero-card:hover .b-hero-img { transform:scale(1.04); }
+.b-img-placeholder { width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
+
+.b-hero-badge {
+  position:absolute; top:16px; left:16px;
+  font-family:var(--b-font); font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase;
+  color:#fff; background:var(--b-primary); padding:5px 12px; border-radius:9999px;
+}
+.b-hero-body    { padding:28px 32px 32px; display:flex; flex-direction:column; gap:10px; }
+.b-hero-title   { font-family:var(--b-font); font-size:clamp(20px,3vw,26px); font-weight:700; line-height:1.3; color:var(--b-on-surf); margin:0; transition:color .2s; }
+.b-hero-card:hover .b-hero-title { color:var(--b-primary); }
+.b-hero-excerpt { font-family:var(--b-font); font-size:15px; line-height:1.65; color:var(--b-on-var); margin:0; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+.b-cta          { display:inline-flex; align-items:center; gap:6px; font-family:var(--b-font); font-size:14px; font-weight:700; color:var(--b-secondary); margin-top:4px; }
+
+    /* ════════════════════════════════════════
+   ZONA 2 – SLIDER
+════════════════════════════════════════ */
+    .b-slider-outer {
+        overflow: hidden;
+    }
+    .b-slider-track {
+        display: flex;
+        gap: 24px;
+        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        will-change: transform;
+    }
+
+    .b-sl-card {
+        flex: 0 0 calc((100% - 48px) / 3);
+        display: flex;
+        flex-direction: column;
+        background: var(--b-surface);
+        border: 1px solid var(--b-outl-var);
+        border-radius: var(--b-r-card);
+        overflow: hidden;
+        box-shadow: var(--b-shadow);
+        text-decoration: none;
+        transition:
+            box-shadow 0.2s,
+            border-color 0.2s,
+            transform 0.2s;
+    }
+    .b-sl-card:hover {
+        box-shadow: var(--b-shadow-hov);
+        border-color: var(--b-accent);
+        transform: translateY(-2px);
+    }
+
+    .b-sl-img-wrap {
+        width: 100%;
+        height: 170px;
+        overflow: hidden;
+        flex-shrink: 0;
+        background: var(--b-surf-cnt);
+    }
+    .b-sl-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        transition: transform 0.5s;
+    }
+    .b-sl-card:hover .b-sl-img {
+        transform: scale(1.06);
+    }
+
+    .b-sl-body {
+        padding: 18px 20px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        flex: 1;
+    }
+    .b-sl-title {
+        font-family: var(--b-font);
+        font-size: 15px;
+        font-weight: 700;
+        line-height: 1.4;
+        color: var(--b-on-surf);
+        margin: 0;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        transition: color 0.2s;
+    }
+    .b-sl-card:hover .b-sl-title {
+        color: var(--b-primary);
+    }
+    .b-sl-excerpt {
+        font-family: var(--b-font);
+        font-size: 13px;
+        line-height: 1.55;
+        color: var(--b-on-var);
+        margin: 0;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        flex: 1;
+    }
+
+    /* Nav */
+    .b-slider-nav {
+        display: flex;
+        gap: 10px;
+    }
+    .b-nav-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 9999px;
+        border: 1.5px solid var(--b-outl-var);
+        background: var(--b-surface);
+        color: var(--b-on-surf);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 18px;
+        transition:
+            background 0.15s,
+            border-color 0.15s,
+            color 0.15s;
+    }
+    .b-nav-btn:hover {
+        background: var(--b-primary);
+        border-color: var(--b-primary);
+        color: #fff;
+    }
+    .b-nav-btn:disabled {
+        opacity: 0.35;
+        cursor: default;
+    }
+
+    /* Dots */
+    .b-dots {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        margin-top: 20px;
+    }
+    .b-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 9999px;
+        background: var(--b-outl-var);
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        transition:
+            background 0.2s,
+            width 0.2s;
+    }
+    .b-dot.active {
+        background: var(--b-accent);
+        width: 24px;
+    }
+
+    /* ════════════════════════════════════════
+   ZONA 3 – DAFTAR
+════════════════════════════════════════ */
+    .b-filter-bar {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
+    }
+    .b-search-wrap {
+        position: relative;
+        flex: 1;
+        min-width: 200px;
+    }
+    .b-search-icon {
+        position: absolute;
+        top: 50%;
+        left: 14px;
+        transform: translateY(-50%);
+        color: var(--b-outline);
+        pointer-events: none;
+    }
+    .b-search-input {
+        width: 100%;
+        padding: 10px 14px 10px 40px;
+        font-family: var(--b-font);
+        font-size: 14px;
+        color: var(--b-on-surf);
+        background: var(--b-surface);
+        border: 1.5px solid var(--b-outl-var);
+        border-radius: 0.5rem;
+        outline: none;
+        box-sizing: border-box;
+        transition:
+            border-color 0.15s,
+            box-shadow 0.15s;
+    }
+    .b-search-input:focus {
+        border-color: var(--b-accent);
+        box-shadow: 0 0 0 3px rgba(0, 168, 181, 0.15);
+    }
+    .b-search-input::placeholder {
+        color: var(--b-outline);
+    }
+
+    .b-filter-sel {
+        padding: 10px 36px 10px 14px;
+        font-family: var(--b-font);
+        font-size: 14px;
+        color: var(--b-on-surf);
+        background: var(--b-surface);
+        border: 1.5px solid var(--b-outl-var);
+        border-radius: 0.5rem;
+        outline: none;
+        appearance: none;
+        cursor: pointer;
+        transition: border-color 0.15s;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%2372787f' stroke-width='2'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+    }
+    .b-filter-sel:focus {
+        border-color: var(--b-accent);
+        box-shadow: 0 0 0 3px rgba(0, 168, 181, 0.15);
+    }
+
+    .b-list {
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* List item (JS-rendered) */
+    .b-list-item {
+        display: grid;
+        grid-template-columns: 96px 1fr auto;
+        align-items: center;
+        gap: 16px;
+        padding: 18px 0;
+        border-bottom: 1px solid var(--b-outl-var);
+        text-decoration: none;
+        color: inherit;
+        transition:
+            background 0.15s,
+            padding 0.15s,
+            border-radius 0.15s;
+    }
+    .b-list-item:first-child {
+        border-top: 1px solid var(--b-outl-var);
+    }
+    .b-list-item:hover {
+        background: var(--b-surf-low);
+        padding-left: 12px;
+        padding-right: 12px;
+        border-radius: 0.5rem;
+        border-bottom-color: transparent;
+    }
+    .b-list-thumb {
+        width: 96px;
+        height: 68px;
+        border-radius: 0.5rem;
+        overflow: hidden;
+        flex-shrink: 0;
+        background: var(--b-surf-cnt);
+    }
+    .b-list-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        transition: transform 0.4s;
+    }
+    .b-list-item:hover .b-list-thumb img {
+        transform: scale(1.07);
+    }
+    .b-list-ph {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .b-list-info {
+        min-width: 0;
+    }
+    .b-list-title {
+        font-family: var(--b-font);
+        font-size: 15px;
+        font-weight: 700;
+        line-height: 1.4;
+        color: var(--b-on-surf);
+        margin: 0 0 4px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        transition: color 0.15s;
+    }
+    .b-list-item:hover .b-list-title {
+        color: var(--b-primary);
+    }
+    .b-list-exc {
+        font-family: var(--b-font);
+        font-size: 13px;
+        color: var(--b-on-var);
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .b-list-date {
+        font-family: var(--b-font);
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--b-outline);
+        white-space: nowrap;
+    }
+
+    .b-empty {
+        text-align: center;
+        padding: 60px 24px;
+        font-family: var(--b-font);
+        font-size: 15px;
+        color: var(--b-on-var);
+    }
+
+    /* Pagination */
+    .b-pager {
+        display: flex;
+        gap: 6px;
+        justify-content: center;
+        margin-top: 40px;
+        flex-wrap: wrap;
+    }
+    .b-pg-btn {
+        min-width: 38px;
+        height: 38px;
+        padding: 0 10px;
+        border-radius: 0.5rem;
+        border: 1.5px solid var(--b-outl-var);
+        background: var(--b-surface);
+        font-family: var(--b-font);
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--b-on-surf);
+        cursor: pointer;
+        transition:
+            background 0.15s,
+            border-color 0.15s,
+            color 0.15s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .b-pg-btn:hover {
+        background: var(--b-surf-cnt);
+        border-color: var(--b-accent);
+    }
+    .b-pg-btn.active {
+        background: var(--b-primary);
+        border-color: var(--b-primary);
+        color: #fff;
+    }
+    .b-pg-btn:disabled {
+        opacity: 0.35;
+        cursor: default;
+    }
+
+/* ── Responsive ─────────────────────────── */
+@media(max-width:900px){
+  .b-sl-card{ flex-basis:calc((100% - 24px) / 2); }
+}
+@media(max-width:600px){
+  .b-hero-body{ padding:20px; }
+  .b-sl-card  { flex-basis:85%; }
+  .b-list-item{ grid-template-columns:72px 1fr; }
+  .b-list-date{ display:none; }
+}
+</style>
+
 <script is:inline>
-  setTimeout(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); }, 300);
+    document.addEventListener("DOMContentLoaded", function () {
+        /* ─── helpers ─── */
+        function qs(sel, ctx) {
+            return (ctx || document).querySelector(sel);
+        }
+        function qsa(sel, ctx) {
+            return Array.from((ctx || document).querySelectorAll(sel));
+        }
+
+        function tglId(el, id, show) {
+            var t = document.getElementById(id);
+            if (t) t.hidden = !show;
+        }
+
+        function fmtTgl(s) {
+            if (!s) return "";
+            try {
+                return new Date(s).toLocaleDateString("id-ID", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                });
+            } catch (e) {
+                return s;
+            }
+        }
+
+        function xText(html, max) {
+            var d = document.createElement("div");
+            d.innerHTML = html || "";
+            var t = (d.textContent || d.innerText || "").trim();
+            return t.length > max
+                ? t.slice(0, max).replace(/\s+\S*$/, "") + "\u2026"
+                : t;
+        }
+
+        /* ════════════════════════════════════════
+     SLIDER (Zona 2)
+  ════════════════════════════════════════ */
+        var track = document.getElementById("sl-track");
+        var dotsWrap = document.getElementById("sl-dots");
+        var btnPrev = document.getElementById("sl-prev");
+        var btnNext = document.getElementById("sl-next");
+
+        if (track) {
+            var cards = qsa(".b-sl-card", track);
+            var dots = dotsWrap ? qsa(".b-dot", dotsWrap) : [];
+            var total = cards.length;
+            var cur = 0;
+            var autoTimer;
+
+            function vis() {
+                var w = track.parentElement.offsetWidth;
+                return w <= 600 ? 1 : w <= 900 ? 2 : 3;
+            }
+            function maxIdx() {
+                return Math.max(0, total - vis());
+            }
+
+            function goTo(idx) {
+                cur = Math.max(0, Math.min(idx, maxIdx()));
+                var w = track.parentElement.offsetWidth;
+                var v = vis();
+                var gap = 24;
+                var cw = (w - gap * (v - 1)) / v;
+                track.style.transform =
+                    "translateX(-" + cur * (cw + gap) + "px)";
+                dots.forEach(function (d, i) {
+                    d.classList.toggle("active", i === cur);
+                });
+                if (btnPrev) btnPrev.disabled = cur === 0;
+                if (btnNext) btnNext.disabled = cur >= maxIdx();
+            }
+
+            function startAuto() {
+                clearInterval(autoTimer);
+                autoTimer = setInterval(function () {
+                    goTo(cur >= maxIdx() ? 0 : cur + 1);
+                }, 4000);
+            }
+
+            if (btnPrev)
+                btnPrev.addEventListener("click", function () {
+                    goTo(cur - 1);
+                    startAuto();
+                });
+            if (btnNext)
+                btnNext.addEventListener("click", function () {
+                    goTo(cur + 1);
+                    startAuto();
+                });
+            dots.forEach(function (d) {
+                d.addEventListener("click", function () {
+                    goTo(parseInt(d.dataset.dot, 10));
+                    startAuto();
+                });
+            });
+
+            track.parentElement.addEventListener("mouseenter", function () {
+                clearInterval(autoTimer);
+            });
+            track.parentElement.addEventListener("mouseleave", startAuto);
+            window.addEventListener("resize", function () {
+                goTo(cur);
+            });
+
+            goTo(0);
+            startAuto();
+        }
+
+        /* ════════════════════════════════════════
+     ZONA 3 – DAFTAR + SEARCH + PAGINASI
+  ════════════════════════════════════════ */
+        var dataEl = document.getElementById("b-data");
+        if (!dataEl) return;
+
+        var allData = [];
+        try {
+            allData = JSON.parse(dataEl.textContent || "[]");
+        } catch (e) {}
+
+        var listEl = document.getElementById("b-list");
+        var emptyEl = document.getElementById("b-empty");
+        var pagerEl = document.getElementById("b-pager");
+        var searchEl = document.getElementById("b-search");
+        var filterEl = document.getElementById("b-filter");
+
+        var PER_PAGE = 5;
+        var curPage = 1;
+        var filtered = allData.slice();
+
+        function renderList() {
+            if (!listEl) return;
+            var start = (curPage - 1) * PER_PAGE;
+            var page = filtered.slice(start, start + PER_PAGE);
+            var empty = filtered.length === 0;
+
+            listEl.innerHTML = "";
+            if (emptyEl) emptyEl.hidden = !empty;
+
+            page.forEach(function (b) {
+                var a = document.createElement("a");
+                a.href = "/berita/" + b.slug;
+                a.className = "b-list-item";
+
+                var thumbHtml = b.img
+                    ? '<img src="' +
+                      b.img +
+                      '" alt="' +
+                      b.judul +
+                      '" loading="lazy">'
+                    : '<div class="b-list-ph"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9acbfb" stroke-width="1.5"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="m3 9 5-5 4 4 3-3 6 6"/></svg></div>';
+
+                a.innerHTML =
+                    '<div class="b-list-thumb">' +
+                    thumbHtml +
+                    "</div>" +
+                    '<div class="b-list-info">' +
+                    '<h3 class="b-list-title">' +
+                    b.judul +
+                    "</h3>" +
+                    '<p class="b-list-exc">' +
+                    xText(b.content_html, 90) +
+                    "</p>" +
+                    "</div>" +
+                    '<time class="b-list-date">' +
+                    fmtTgl(b.published_at) +
+                    "</time>";
+
+                listEl.appendChild(a);
+            });
+
+            renderPager();
+        }
+
+        function renderPager() {
+            if (!pagerEl) return;
+            var total = Math.ceil(filtered.length / PER_PAGE);
+            pagerEl.innerHTML = "";
+            if (total <= 1) return;
+
+            function mkBtn(label, page, disabled, active) {
+                var btn = document.createElement("button");
+                btn.className = "b-pg-btn" + (active ? " active" : "");
+                btn.textContent = label;
+                btn.disabled = disabled;
+                btn.addEventListener("click", function () {
+                    curPage = page;
+                    renderList();
+                    listEl &&
+                        listEl.scrollIntoView({
+                            behavior: "smooth",
+                            block: "start",
+                        });
+                });
+                return btn;
+            }
+
+            pagerEl.appendChild(
+                mkBtn("\u2190", curPage - 1, curPage === 1, false),
+            );
+            for (var i = 1; i <= total; i++) {
+                pagerEl.appendChild(mkBtn(String(i), i, false, i === curPage));
+            }
+            pagerEl.appendChild(
+                mkBtn("\u2192", curPage + 1, curPage === total, false),
+            );
+        }
+
+        function applyFilter() {
+            var q = (searchEl ? searchEl.value : "").toLowerCase().trim();
+            var cat = (filterEl ? filterEl.value : "").toLowerCase().trim();
+            filtered = allData.filter(function (b) {
+                var inQ =
+                    !q ||
+                    b.judul.toLowerCase().includes(q) ||
+                    (b.content_html || "").toLowerCase().includes(q);
+                var inCat =
+                    !cat ||
+                    b.judul.toLowerCase().includes(cat) ||
+                    (b.slug || "").toLowerCase().includes(cat);
+                return inQ && inCat;
+            });
+            curPage = 1;
+            renderList();
+        }
+
+        if (searchEl) searchEl.addEventListener("input", applyFilter);
+        if (filterEl) filterEl.addEventListener("change", applyFilter);
+
+        renderList();
+
+        /* lucide icons */
+        if (typeof lucide !== "undefined") lucide.createIcons();
+    });
 </script>

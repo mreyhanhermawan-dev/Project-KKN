@@ -38,7 +38,7 @@ const pencaharianMax = Math.max(1, ...pencaharianData.map(d => d.value));
 
 <!-- Hero -->
 <section class="relative">
-  <div class="h-48 sm:h-64 overflow-hidden">
+  <div class="h-48 sm:h-.4 overflow-hidden">
     <img
       src="/images/pantai_loji.png"
       alt="Pantai dan alam Kelurahan Palabuhanratu"
@@ -278,7 +278,7 @@ const pencaharianMax = Math.max(1, ...pencaharianData.map(d => d.value));
   <section id="sejarah" style="scroll-margin-top: 120px;">
     <h2 class="text-2xl font-heading font-extrabold text-primary">Sejarah Kelurahan</h2>
     <div class="prose max-w-none mt-4 text-muted leading-relaxed" set:html={sejarah?.content_html ?? `
-      <p>Kelurahan Palabuhanratu memiliki sejarah panjang sebagai perkampungan nelayan di tepi Samudra Hindia. Nama "Palabuhanratu" diyakini berasal dari bangunan loji peninggalan masa kolonial yang pernah berdiri di kawasan ini. Masyarakat kelurahan secara turun-temurun hidup dari hasil laut dan pertanian pesisir.</p>
+      <p>Kelurahan Palabuhanratu memiliki sejarah panjang sebagai perkampungan nelayan di tepi Samudra Hindia. Nama "Palabuhanratu" diyakini berasal dari bangunan peninggalan masa kolonial yang pernah berdiri di kawasan ini. Masyarakat kelurahan secara turun-temurun hidup dari hasil laut dan pertanian pesisir.</p>
       <p>Posisi strategis Kelurahan Palabuhanratu sebagai gerbang Geopark Ciletuh mulai membuka babak baru bagi perekonomian kelurahan, dengan pariwisata menjadi sektor yang terus berkembang di samping perikanan tradisional yang menjadi tulang punggung.</p>
     `} />
   </section>
@@ -290,7 +290,7 @@ const pencaharianMax = Math.max(1, ...pencaharianData.map(d => d.value));
     <div id="profil-map" class="mt-4 rounded-2xl overflow-hidden border border-line shadow-[0_4px_10px_rgba(15,36,51,.08)]" style="height: 380px;"></div>
     <p class="text-sm text-muted mt-2 flex items-center gap-1.5">
       <i data-lucide="info" class="w-4 h-4"></i>
-      Koordinat: -7.059, 106.578 ·
+      Koordinat: -6.9873, 106.5575 ·
       <a href="/peta" class="text-accent hover:underline font-medium">Buka peta interaktif lengkap →</a>
     </p>
   </section>
@@ -316,9 +316,9 @@ const pencaharianMax = Math.max(1, ...pencaharianData.map(d => d.value));
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script is:inline>
   document.addEventListener('DOMContentLoaded', function() {
-    var map = L.map('profil-map', { scrollWheelZoom: false }).setView([-7.0500, 106.5413], 14);
+    var map = L.map('profil-map', { scrollWheelZoom: false }).setView([-6.9873, 106.5575], 14);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
-    L.marker([-7.0500, 106.5413]).addTo(map).bindPopup('<b>Kelurahan Palabuhanratu</b><br>Kec. Palabuhanratu, Sukabumi');
+    L.marker([-6.9873, 106.5575]).addTo(map).bindPopup('<b>Kelurahan Palabuhanratu</b><br>Kec. Palabuhanratu, Sukabumi');
     if (typeof lucide !== 'undefined') lucide.createIcons();
   });
   setTimeout(function() {

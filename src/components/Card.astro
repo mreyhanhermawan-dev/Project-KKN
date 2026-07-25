@@ -20,12 +20,14 @@ const { href, imageSrc, imageAlt = '', class: className } = Astro.props;
   ]}
 >
   {imageSrc && (
-    <img
-      src={imageSrc}
-      alt={imageAlt}
-      loading="lazy"
-      class="w-full aspect-[16/10] object-cover"
-    />
+    <div class="w-full h-48 overflow-hidden shrink-0">
+      <img
+        src={imageSrc}
+        alt={imageAlt}
+        loading="lazy"
+        class="w-full h-full object-cover"
+      />
+    </div>
   )}
   <slot />
 </a>

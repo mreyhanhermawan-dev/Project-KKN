@@ -79,9 +79,9 @@ const kanal = [
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script is:inline>
   document.addEventListener('DOMContentLoaded', function() {
-    var map = L.map('kontak-map', { scrollWheelZoom: false }).setView([-7.0589, 106.5778], 14);
+    var map = L.map('kontak-map', { scrollWheelZoom: false }).setView([-6.9873, 106.5575], 14);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
-    L.marker([-7.0589, 106.5778]).addTo(map).bindPopup('<b>Kantor Kelurahan Palabuhanratu</b><br>Kec. Simpenan, Sukabumi');
+    L.marker([-6.9873, 106.5575]).addTo(map).bindPopup('<b>Kantor Kelurahan Palabuhanratu</b><br>Kec. Simpenan, Sukabumi');
     if (typeof lucide !== 'undefined') lucide.createIcons();
   });
   setTimeout(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); }, 300);

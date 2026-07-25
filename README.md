@@ -1,8 +1,8 @@
-# Website Desa Loji
+# Website Kelurahan Palabuhanratu
 
-Website resmi Desa Loji, dibangun sebagai bagian dari program **KKN-T Inovasi IPB University 2026** di Desa Loji, Kabupaten Sukabumi. Situs ini menampilkan profil desa, potensi (pertanian, perikanan, pariwisata, sumber daya manusia), direktori UMKM, peta interaktif, dan berita desa, lengkap dengan panel admin agar perangkat desa dapat mengelola konten sendiri tanpa bantuan teknis.
+Website resmi Kelurahan Palabuhanratu, dibangun sebagai bagian dari program **KKN-T Inovasi IPB University 2026** di Kelurahan Palabuhanratu, Kabupaten Sukabumi. Situs ini menampilkan profil kelurahan, potensi (pertanian, perikanan, pariwisata, sumber daya manusia), direktori UMKM, peta interaktif, dan berita kelurahan, lengkap dengan panel admin agar perangkat desa dapat mengelola konten sendiri tanpa bantuan teknis.
 
-Situs berjalan langsung di [loji.web.id](https://loji.web.id).
+Situs berjalan langsung di [palabuhanratu.web.id](https://palabuhanratu.web.id).
 
 ## Tumpukan Teknologi (Tech Stack)
 
@@ -87,7 +87,7 @@ wrangler kv namespace create SESSION_KV
 Lalu terapkan seluruh migration ke database produksi:
 
 ```bash
-wrangler d1 migrations apply web-desa-loji-db --remote
+wrangler d1 migrations apply web-desa-palabuhan-db --remote
 ```
 
 Backup database dilakukan **manual** lewat tombol export di panel admin (`/admin/export`), bukan cron otomatis. Cron mingguan tersedia di kode namun sengaja dinonaktifkan (`crons = []` di `wrangler.toml`) karena memerlukan subdomain `workers.dev` yang terdaftar di akun; aktifkan kembali dengan mengisi `crons = ["0 0 * * 0"]` bila diperlukan.
@@ -124,4 +124,4 @@ Dibangun mengikuti alur perencanaan terstruktur (brief, PRD, UX, arsitektur, epi
 
 ---
 
-*Dikembangkan oleh tim KKN-T Inovasi IPB University 2026, Desa Loji, Kabupaten Sukabumi.*
+*Dikembangkan oleh tim KKN-T Inovasi IPB University 2026, Kelurahan Palabuhanratu, Kabupaten Sukabumi.*

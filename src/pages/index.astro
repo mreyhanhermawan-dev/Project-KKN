@@ -334,9 +334,9 @@ const finalBerita = beritaList.length > 0
     </div>
     <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
       {finalBerita.map(b => (
-        <a href={`/berita/${b.slug}`} class="group block bg-white border border-line rounded-2xl overflow-hidden shadow-[0_4px_10px_rgba(15,36,51,.08)] hover:shadow-[0_12px_24px_rgba(15,36,51,.12)] hover:border-accent transition-all">
+        <a href={`/berita/${b.slug}`} class="group flex flex-col bg-white border border-line rounded-2xl overflow-hidden shadow-[0_4px_10px_rgba(15,36,51,.08)] hover:shadow-[0_12px_24px_rgba(15,36,51,.12)] hover:border-accent transition-all h-[360px] w-full">
           {b.img && (
-            <div class="aspect-[16/9] overflow-hidden">
+            <div class="w-full h-48 shrink-0 overflow-hidden">
               <img
                 src={b.img}
                 alt={b.judul}
@@ -345,11 +345,11 @@ const finalBerita = beritaList.length > 0
               />
             </div>
           )}
-          <div class="p-5">
+          <div class="p-5 flex flex-col flex-1 overflow-hidden">
             <time class="text-xs font-heading font-semibold text-muted">
               {b.published_at ? formatTanggal(b.published_at) : ''}
             </time>
-            <h3 class="font-heading font-semibold text-ink mt-1 group-hover:text-primary transition-colors leading-snug">{b.judul}</h3>
+            <h3 class="font-heading font-semibold text-ink mt-1 group-hover:text-primary transition-colors leading-snug line-clamp-2">{b.judul}</h3>
             <p class="text-sm text-muted mt-1 line-clamp-2">{b.ringkasan}</p>
           </div>
         </a>

@@ -1,0 +1,255 @@
+---
+import Layout from '../../components/Layout.astro';
+import { getProdukBySlug, getOtherProdukFromSameStore, formatRupiah } from '../../lib/db/produk';
+import { getMediaForEntity, getCoversForType, mediaUrl } from '../../lib/db/media';
+import { getEnv } from '@lib/env';
+import { SITE_URL } from '@lib/site';
+
+const { slug } = Astro.params as { slug: string };
+const env = getEnv();
+
+const product = env ? await getProdukBySlug(slug, env.DB) : null;
+if (!product) return Astro.redirect('/404');
+
+const [productMediaList, storeMediaList, productCovers, otherProducts] = await Promise.all([
+  env ? getMediaForEntity('produk', product.id, env.DB) : [],
+  env ? getMediaForEntity('umkm', product.umkm_id, env.DB) : [],
+  env ? getCoversForType('produk', env.DB) : new Map(),
+  env ? getOtherProdukFromSameStore(product.umkm_id, product.id, env.DB) : [],
+]);
+
+const cover = productMediaList[0] || storeMediaList[0];
+
+const getProductImg = (pSlug: string, pId: number) => {
+  const pCover = productCovers.get(pId);
+  if (pCover) return mediaUrl(pCover);
+  if (pSlug.includes('lampion') || pSlug.includes('bambu') || pSlug.includes('anyaman')) return '/images/kerajinan_bambu.png';
+  if (pSlug.includes('ikan') || pSlug.includes('cumi') || pSlug.includes('bakar')) return '/images/ikan_bakar.png';
+  if (pSlug.includes('sayur') || pSlug.includes('bayam') || pSlug.includes('tomat')) return '/images/kebun_sayur.png';
+  return storeMediaList[0] ? mediaUrl(storeMediaList[0]) : '/images/kerajinan_bambu.png';
+};
+
+const canonicalUrl = new URL(`/produk/${slug}`, Astro.site ?? SITE_URL).href;
+
+const waMessage = encodeURIComponent(
+  `Halo ${product.umkm_nama}, saya melihat produk "${product.nama}" (${formatRupiah(product.harga)}) di website Kelurahan Palabuhanratu. Apakah produk ini tersedia?`
+);
+---
+
+<Layout
+  title={`${product.nama} - ${product.umkm_nama} | Kelurahan Palabuhanratu`}
+  description={`${product.nama} dari ${product.umkm_nama}. Harga: ${formatRupiah(product.harga)}. Lokasi: ${product.umkm_lokasi ?? 'Kelurahan Palabuhanratu'}`}
+  ogImage={cover ? mediaUrl(cover) : undefined}
+>
+
+  <!-- Header Section -->
+  <div class="py-8 md:py-10 text-white" style="background: linear-gradient(135deg, #0E4A6E, #0A3650);">
+    <div class="mx-auto max-w-6xl px-4 md:px-6">
+      <nav aria-label="Breadcrumb" class="text-sm mb-3 opacity-80 flex flex-wrap items-center gap-1.5">
+        <a href="/" class="hover:underline">Beranda</a>
+        <span>/</span>
+        <a href="/umkm" class="hover:underline">Direktori UMKM</a>
+        <span>/</span>
+        <a href={`/umkm/${product.umkm_slug}`} class="hover:underline">{product.umkm_nama}</a>
+        <span>/</span>
+        <span class="text-white font-medium">{product.nama}</span>
+      </nav>
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <span class="inline-block text-xs font-heading font-semibold px-3 py-1 rounded-full bg-white/20 text-white mb-2">
+            {product.umkm_kategori}
+          </span>
+          <h1 class="font-heading font-bold text-2xl md:text-4xl text-white">{product.nama}</h1>
+          <p class="text-white/80 mt-1 text-base flex items-center gap-2">
+            <span>Oleh: <a href={`/umkm/${product.umkm_slug}`} class="underline hover:text-accent">{product.umkm_nama}</a></span>
+          </p>
+        </div>
+        <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 text-right self-start md:self-auto border border-white/20">
+          <p class="text-xs text-white/70 font-heading">Harga Produk</p>
+          <p class="text-2xl md:text-3xl font-extrabold text-accent">{formatRupiah(product.harga)}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mx-auto max-w-6xl px-4 md:px-6 py-10">
+    <div class="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-10">
+
+      <!-- Left Column: Media + Description + Other Products -->
+      <div class="space-y-8">
+        <!-- Main Product Cover Image -->
+        <div class="bg-white rounded-2xl overflow-hidden border border-line shadow-md">
+          {cover ? (
+            <div class="aspect-[16/10] overflow-hidden">
+              <img src={mediaUrl(cover)} alt={cover.alt || product.nama}
+                class="w-full h-full object-cover" loading="lazy" />
+            </div>
+          ) : (
+            <div class="aspect-[16/10] overflow-hidden">
+              <img src={getProductImg(product.slug, product.id)} alt={product.nama}
+                class="w-full h-full object-cover" loading="lazy" />
+            </div>
+          )}
+
+          {productMediaList.length > 1 && (
+            <div class="p-3 bg-sand/50 grid grid-cols-4 gap-2 border-t border-line">
+              {productMediaList.map(m => (
+                <div class="aspect-square rounded-lg overflow-hidden border border-line">
+                  <img src={`/api/media/${encodeURIComponent(m.r2_key_thumb)}`} alt={m.alt}
+                    class="w-full h-full object-cover" loading="lazy" />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <!-- Product Description -->
+        <div class="bg-white rounded-2xl p-6 border border-line shadow-sm">
+          <h2 class="font-heading font-bold text-xl mb-4 text-primary">Deskripsi Produk</h2>
+          {product.deskripsi_html ? (
+            <div class="prose max-w-none text-ink/90 leading-relaxed" set:html={product.deskripsi_html} />
+          ) : (
+            <p class="text-muted italic">Tidak ada deskripsi rinci untuk produk ini.</p>
+          )}
+        </div>
+
+        <!-- SECTION: PRODUK LAIN DARI TOKO INI -->
+        <div class="bg-white rounded-2xl p-6 border border-line shadow-sm">
+          <div class="flex items-center justify-between mb-6 pb-3 border-b border-line">
+            <div>
+              <h2 class="font-heading font-bold text-xl text-primary">Produk Lain dari Toko Ini</h2>
+              <p class="text-xs text-muted mt-0.5">Katalog pilihan produk lainnya dari <strong class="text-ink">{product.umkm_nama}</strong></p>
+            </div>
+            <a href={`/umkm/${product.umkm_slug}`} class="text-xs font-heading font-semibold text-accent hover:underline flex items-center gap-1">
+              Lihat Semua →
+            </a>
+          </div>
+
+          {otherProducts.length === 0 ? (
+            <div class="p-6 text-center text-muted bg-sand/30 rounded-xl">
+              <p class="text-sm">Toko ini belum memiliki produk lain yang terdaftar.</p>
+            </div>
+          ) : (
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {otherProducts.map(op => (
+                <div class="group bg-white border border-line rounded-xl overflow-hidden shadow-sm hover:shadow-md hover:border-accent transition-all flex flex-col">
+                  <a href={`/produk/${op.slug}`} class="block aspect-[16/10] overflow-hidden bg-sand">
+                    <img src={getProductImg(op.slug, op.id)} alt={op.nama}
+                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                  </a>
+                  <div class="p-4 flex flex-col flex-1 justify-between">
+                    <div>
+                      <h3 class="font-heading font-semibold text-ink text-base group-hover:text-primary transition-colors">
+                        <a href={`/produk/${op.slug}`}>{op.nama}</a>
+                      </h3>
+                      <p class="font-bold text-accent text-sm mt-1">{formatRupiah(op.harga)}</p>
+                    </div>
+                    <a href={`/produk/${op.slug}`}
+                      class="mt-3 text-xs font-heading font-semibold text-center text-primary bg-sand hover:bg-primary hover:text-white py-2 px-3 rounded-lg transition-colors min-h-[36px] flex items-center justify-center">
+                      Lihat Detail Produk
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <!-- Right Column: Sticky Action & Store Card -->
+      <aside class="lg:sticky lg:top-24 self-start space-y-6">
+
+        <!-- Purchase & Contact Box -->
+        <div class="bg-white rounded-2xl border border-line p-6 shadow-md space-y-4">
+          <div class="pb-3 border-b border-line">
+            <span class="text-xs font-heading text-muted uppercase tracking-wider">Pemesanan Langsung</span>
+            <p class="font-heading font-bold text-2xl text-accent mt-0.5">{formatRupiah(product.harga)}</p>
+          </div>
+
+          <!-- WhatsApp Primary Action -->
+          {product.umkm_wa_number ? (
+            <a href={`https://wa.me/${product.umkm_wa_number.replace(/\D/g,'')}?text=${waMessage}`}
+              target="_blank" rel="noopener noreferrer"
+              class="flex items-center justify-center gap-2 w-full px-4 py-3.5 rounded-xl font-heading font-semibold text-white transition-transform active:scale-[0.98] shadow-sm hover:opacity-95"
+              style="background: #25D366; min-height: 48px;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+              Pesan via WhatsApp
+            </a>
+          ) : product.umkm_telepon ? (
+            <a href={`tel:${product.umkm_telepon}`}
+              class="flex items-center justify-center gap-2 w-full px-4 py-3.5 rounded-xl font-heading font-semibold border-2 border-primary text-primary hover:bg-primary hover:text-white transition-colors"
+              style="min-height: 48px;">
+              Hubungi via Telepon
+            </a>
+          ) : null}
+
+          {product.umkm_toko_online_url && (
+            <a href={product.umkm_toko_online_url} target="_blank" rel="noopener noreferrer"
+              class="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl font-heading font-semibold border border-line text-ink hover:bg-sand transition-colors"
+              style="min-height: 44px;">
+              Buka Toko Online / Marketplace
+            </a>
+          )}
+
+          <!-- Share buttons -->
+          <div class="pt-3 border-t border-line">
+            <p class="text-muted text-xs font-heading mb-2">Bagikan Produk Ini</p>
+            <div class="flex gap-2">
+              <a href={`https://wa.me/?text=${encodeURIComponent(product.nama + ' (' + formatRupiah(product.harga) + '): ' + canonicalUrl)}`}
+                target="_blank" rel="noopener noreferrer" aria-label="Bagikan via WhatsApp"
+                class="w-10 h-10 rounded-lg border border-line flex items-center justify-center hover:bg-sand text-ink transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+              </a>
+              <button id="copy-link" type="button" aria-label="Salin tautan produk"
+                class="w-10 h-10 rounded-lg border border-line flex items-center justify-center hover:bg-sand cursor-pointer text-ink transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+              </button>
+              <span id="copy-confirm" class="text-xs text-cta hidden self-center ml-1">Tautan disalin!</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Store Profile Card -->
+        <div class="bg-white rounded-2xl border border-line p-6 shadow-sm space-y-4">
+          <div class="flex items-start justify-between gap-3 pb-3 border-b border-line">
+            <div>
+              <span class="text-[11px] font-heading font-semibold uppercase px-2 py-0.5 rounded bg-sand text-primary">Penjual / Toko</span>
+              <h3 class="font-heading font-bold text-lg text-ink mt-1">
+                <a href={`/umkm/${product.umkm_slug}`} class="hover:text-primary">{product.umkm_nama}</a>
+              </h3>
+              <p class="text-xs text-muted">{product.umkm_kategori}</p>
+            </div>
+          </div>
+
+          {product.umkm_lokasi && (
+            <div class="text-xs text-muted flex items-start gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2" class="shrink-0 mt-0.5" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span>{product.umkm_lokasi}</span>
+            </div>
+          )}
+
+          <div class="pt-2">
+            <a href={`/umkm/${product.umkm_slug}`}
+              class="block text-center w-full bg-sand hover:bg-primary hover:text-white text-primary text-xs font-heading font-semibold py-2.5 rounded-lg transition-colors">
+              Kunjungi Profil Toko & Katalog Lengkap →
+            </a>
+          </div>
+        </div>
+
+      </aside>
+
+    </div>
+  </div>
+
+</Layout>
+
+<script define:vars={{ canonicalUrl }}>
+  document.getElementById('copy-link')?.addEventListener('click', async () => {
+    await navigator.clipboard.writeText(canonicalUrl);
+    const msg = document.getElementById('copy-confirm');
+    if (msg) {
+      msg.classList.remove('hidden');
+      setTimeout(() => msg.classList.add('hidden'), 2000);
+    }
+  });
+</script>

@@ -1,0 +1,278 @@
+---
+import Layout from '../components/Layout.astro';
+import { getPengaturan } from '../lib/db/pengaturan';
+import { getEnv } from '@lib/env';
+
+const env = getEnv();
+const s = env ? await getPengaturan(env.DB) : {};
+
+const layananCategories = [
+  {
+    id: 'kependudukan',
+    title: 'Kependudukan & Catatan Sipil',
+    description: 'Pengurusan kartu identitas, kartu keluarga, dan surat keterangan kependudukan lainnya.',
+    icon: 'user-check',
+    items: [
+      {
+        nama: 'Surat Pengantar KTP / Kartu Keluarga',
+        deskripsi: 'Surat pengantar untuk menerbitkan atau melakukan perubahan data pada Kartu Tanda Penduduk (KTP) dan Kartu Keluarga (KK) di Dinas Kependudukan dan Catatan Sipil.',
+        syarat: [
+          'Surat pengantar dari RT/RW setempat',
+          'Fotokopi KTP / KK lama (jika ada perubahan/hilang)',
+          'Fotokopi Akta Kelahiran / Akta Nikah / Ijazah',
+          'Surat Kehilangan dari Kepolisian (jika KTP/KK lama hilang)'
+        ],
+        estimasi: '1 Hari Kerja',
+        biaya: 'Gratis'
+      },
+      {
+        nama: 'Surat Keterangan Domisili',
+        deskripsi: 'Surat keterangan resmi yang menyatakan tempat tinggal atau keberadaan seseorang di wilayah Kelurahan Palabuhanratu.',
+        syarat: [
+          'Surat pengantar RT/RW setempat',
+          'Fotokopi KTP dan Kartu Keluarga pemohon',
+          'Surat kuasa bermaterai (jika diwakilkan)'
+        ],
+        estimasi: '1 Hari Kerja',
+        biaya: 'Gratis'
+      },
+      {
+        nama: 'Surat Keterangan Pindah / Datang',
+        deskripsi: 'Surat keterangan untuk warga yang ingin pindah keluar daerah atau melapor kedatangan dari luar wilayah Kelurahan Palabuhanratu.',
+        syarat: [
+          'Surat pengantar RT/RW setempat',
+          'Kartu Keluarga asli dan KTP asli',
+          'Surat Keterangan Pindah dari daerah asal (bagi warga baru yang datang)',
+          'Pas foto terbaru ukuran 3x4 (2 lembar)'
+        ],
+        estimasi: '1 - 2 Hari Kerja',
+        biaya: 'Gratis'
+      }
+    ]
+  },
+  {
+    id: 'sosial',
+    title: 'Kesejahteraan Sosial & Kesehatan',
+    description: 'Layanan rekomendasi sosial, bantuan pemerintah, dan fasilitas kesehatan masyarakat.',
+    icon: 'heart-handshake',
+    items: [
+      {
+        nama: 'Surat Keterangan Tidak Mampu (SKTM)',
+        deskripsi: 'Surat keterangan untuk memperoleh keringanan biaya pendidikan, pengobatan/kesehatan, atau keperluan sosial lainnya bagi keluarga prasejahtera.',
+        syarat: [
+          'Surat pengantar RT/RW setempat yang menyatakan tidak mampu',
+          'Fotokopi Kartu Keluarga dan KTP pemohon',
+          'Fotokopi Kartu Indonesia Sehat (KIS)/BPJS (jika ada)',
+          'Surat pernyataan tidak mampu bermaterai Rp 10.000 diketahui RT/RW'
+        ],
+        estimasi: '1 Hari Kerja',
+        biaya: 'Gratis'
+      },
+      {
+        nama: 'Rekomendasi Bantuan Sosial',
+        deskripsi: 'Pengajuan atau usulan untuk terdaftar sebagai penerima program bantuan sosial pemerintah (PKH, BPNT, PBI APBD, dll).',
+        syarat: [
+          'Fotokopi Kartu Keluarga dan KTP',
+          'Surat keterangan tidak mampu (SKTM) dari kelurahan',
+          'Mengisi formulir DTKS (Data Terpadu Kesejahteraan Sosial)'
+        ],
+        estimasi: 'Sesuai jadwal verifikasi dinas terkait',
+        biaya: 'Gratis'
+      }
+    ]
+  },
+  {
+    id: 'usaha-tanah',
+    title: 'Usaha & Pertanahan',
+    description: 'Surat keterangan usaha mikro, legalitas pengantar, dan administrasi pertanahan kelurahan.',
+    icon: 'briefcase',
+    items: [
+      {
+        nama: 'Surat Keterangan Usaha (SKU)',
+        deskripsi: 'Surat keterangan resmi yang menyatakan bahwa pemohon benar memiliki suatu usaha mikro, kecil, atau menengah (UMKM) di wilayah Kelurahan Palabuhanratu.',
+        syarat: [
+          'Surat pengantar RT/RW setempat',
+          'Fotokopi KTP dan Kartu Keluarga pemilik usaha',
+          'Foto tempat usaha / aktivitas usaha',
+          'Mengisi surat pernyataan kepemilikan usaha'
+        ],
+        estimasi: '1 Hari Kerja',
+        biaya: 'Gratis'
+      },
+      {
+        nama: 'Surat Pengantar Nikah (N1, N2, N4)',
+        deskripsi: 'Surat pengantar kelurahan sebagai syarat wajib pernikahan untuk didaftarkan ke KUA (Kantor Urusan Agama) atau Pencatatan Sipil.',
+        syarat: [
+          'Surat pengantar RT/RW setempat',
+          'Fotokopi KTP dan Kartu Keluarga calon pengantin',
+          'Fotokopi Akta Kelahiran dan Ijazah calon pengantin',
+          'Fotokopi KTP orang tua / wali',
+          'Surat Kematian/Cerai asli (jika berstatus janda/duda)',
+          'Pas foto latar belakang biru (2x3 = 4 lembar, 4x6 = 2 lembar)'
+        ],
+        estimasi: '1 - 2 Hari Kerja',
+        biaya: 'Gratis'
+      },
+      {
+        nama: 'Surat Keterangan Riwayat Tanah / Tidak Sengketa',
+        deskripsi: 'Surat keterangan untuk memperkuat pembuktian riwayat kepemilikan tanah dan menyatakan tanah tersebut bebas dari sengketa hukum.',
+        syarat: [
+          'Surat pengantar RT/RW setempat',
+          'Bukti kepemilikan awal (Girik, Pipil, Letter C, atau Akta Jual Beli)',
+          'Fotokopi KTP & KK pemohon',
+          'Surat pernyataan tidak sengketa yang ditandatangani oleh tetangga batas tanah dan diketahui RT/RW'
+        ],
+        estimasi: '3 - 5 Hari Kerja (memerlukan peninjauan lapangan)',
+        biaya: 'Gratis'
+      }
+    ]
+  }
+];
+---
+
+<Layout
+  title="Layanan Kelurahan | Kelurahan Palabuhanratu"
+  description="Daftar layanan administrasi kependudukan, perizinan usaha, kesejahteraan sosial, dan pertanahan resmi di Kelurahan Palabuhanratu."
+>
+
+<!-- Hero -->
+<section class="relative">
+  <div class="h-48 sm:h-60 overflow-hidden">
+    <img
+      src="/images/tile_layanan.png"
+      alt="Layanan Masyarakat Kelurahan Palabuhanratu"
+      class="w-full h-full object-cover"
+    />
+  </div>
+  <div class="absolute inset-0" style="background: rgba(10,54,80,0.65);"></div>
+  <div class="absolute inset-0 flex items-end">
+    <div class="mx-auto max-w-[1152px] px-4 sm:px-6 w-full pb-6 text-white">
+      <nav aria-label="Breadcrumb" class="text-sm text-white/80 flex items-center gap-1.5">
+        <a href="/" class="hover:text-white">Beranda</a>
+        <i data-lucide="chevron-right" class="w-4 h-4"></i>
+        <span class="font-medium">Layanan Kelurahan</span>
+      </nav>
+      <h1 class="text-3xl sm:text-4xl font-heading font-extrabold mt-1">Layanan Publik & Administrasi</h1>
+      <p class="text-white/85 mt-1 max-w-xl">Informasi alur, syarat, dan estimasi waktu pelayanan bagi warga Kelurahan Palabuhanratu.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Sub Navigation / Categories Filter -->
+<div class="sticky top-16 z-30 bg-white border-b border-line">
+  <div class="mx-auto max-w-[1152px] px-4 sm:px-6 py-3 flex gap-3 overflow-x-auto justify-start md:justify-center">
+    {layananCategories.map(cat => (
+      <a
+        href={`#${cat.id}`}
+        class="whitespace-nowrap px-4 py-2 rounded-full text-sm font-heading font-semibold border border-line text-text-muted hover:border-accent hover:text-primary transition-all duration-150 flex items-center gap-2"
+      >
+        <i data-lucide={cat.icon} class="w-4 h-4"></i>
+        {cat.title}
+      </a>
+    ))}
+  </div>
+</div>
+
+<main id="main" class="mx-auto max-w-[1152px] px-4 sm:px-6 py-10">
+  <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+    
+    <!-- Sidebar Panduan Umum -->
+    <div class="lg:col-span-1 space-y-6">
+      <div class="bg-white border border-line rounded-2xl p-5 shadow-sm">
+        <h3 class="font-heading font-bold text-lg text-primary mb-3 flex items-center gap-2">
+          <i data-lucide="info" class="w-5 h-5 text-accent"></i>
+          Panduan Umum
+        </h3>
+        <ul class="space-y-3 text-sm text-text-muted">
+          <li class="flex gap-2">
+            <span class="font-bold text-accent">•</span>
+            <span>Pastikan berkas asli dibawa sebagai pembanding saat mengajukan permohonan.</span>
+          </li>
+          <li class="flex gap-2">
+            <span class="font-bold text-accent">•</span>
+            <span>Surat pengantar RT/RW wajib mencantumkan tanda tangan ketua RT & RW aktif.</span>
+          </li>
+          <li class="flex gap-2">
+            <span class="font-bold text-accent">•</span>
+            <span>Seluruh pelayanan administrasi di Kelurahan Palabuhanratu adalah <strong>100% GRATIS</strong>.</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="bg-gradient-to-br from-primary to-primary-dark rounded-2xl p-5 text-white shadow-md">
+        <h3 class="font-heading font-bold text-lg mb-2">Butuh Bantuan?</h3>
+        <p class="text-sm text-white/80 mb-4">Silakan hubungi customer service kelurahan untuk menanyakan status dokumen Anda.</p>
+        <a 
+          href="/kontak" 
+          class="inline-flex items-center justify-center w-full py-2.5 px-4 rounded-xl bg-accent text-white font-heading font-semibold text-sm hover:opacity-90 transition-opacity"
+        >
+          Hubungi Kelurahan
+        </a>
+      </div>
+    </div>
+
+    <!-- Daftar Layanan Utama -->
+    <div class="lg:col-span-3 space-y-12">
+      {layananCategories.map(cat => (
+        <section id={cat.id} class="scroll-margin-top-[120px] bg-white border border-line rounded-2xl p-6 sm:p-8 shadow-sm">
+          <div class="flex items-center gap-3 border-b border-line pb-4 mb-6">
+            <div class="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent">
+              <i data-lucide={cat.icon} class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h2 class="text-xl sm:text-2xl font-heading font-extrabold text-primary">{cat.title}</h2>
+              <p class="text-xs text-text-muted mt-0.5">{cat.description}</p>
+            </div>
+          </div>
+
+          <div class="space-y-8">
+            {cat.items.map(item => (
+              <div class="border-b border-line last:border-0 pb-6 last:pb-0">
+                <h3 class="font-heading font-bold text-base sm:text-lg text-text hover:text-primary transition-colors mb-2">
+                  {item.nama}
+                </h3>
+                <p class="text-sm text-text-muted leading-relaxed mb-4">
+                  {item.deskripsi}
+                </p>
+                
+                <div class="bg-bg rounded-xl p-4 sm:p-5 border border-line">
+                  <h4 class="font-heading font-semibold text-xs text-primary uppercase tracking-wider mb-2.5">
+                    Dokumen Persyaratan:
+                  </h4>
+                  <ul class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-text-muted">
+                    {item.syarat.map(sy => (
+                      <li class="flex items-start gap-2">
+                        <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0"></i>
+                        <span>{sy}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  
+                  <div class="mt-4 pt-4 border-t border-line flex flex-wrap gap-x-6 gap-y-2 text-xs text-text-muted font-medium">
+                    <span class="flex items-center gap-1.5">
+                      <i data-lucide="clock" class="w-3.5 h-3.5 text-accent"></i>
+                      Estimasi: <strong class="text-text">{item.estimasi}</strong>
+                    </span>
+                    <span class="flex items-center gap-1.5">
+                      <i data-lucide="tag" class="w-3.5 h-3.5 text-accent"></i>
+                      Biaya: <strong class="text-emerald-700">{item.biaya}</strong>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+
+  </div>
+</main>
+</Layout>
+
+<style>
+  /* Scroll Margin Top offset for sticky header */
+  .scroll-margin-top-\[120px\] {
+    scroll-margin-top: 130px;
+  }
+</style>
