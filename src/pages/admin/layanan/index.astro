@@ -1,0 +1,152 @@
+---
+import AdminLayout from "../../../components/AdminLayout.astro";
+import { getLayananData } from "../../../lib/db/layanan";
+import { getEnv } from "@lib/env";
+
+const env = getEnv();
+const saved = Astro.url.searchParams.get("saved");
+const error = Astro.url.searchParams.get("error");
+
+const layananData = env ? await getLayananData(env.DB) : [];
+---
+
+<AdminLayout title="Kelola Layanan" breadcrumb="Layanan Kelurahan">
+    {
+        saved && (
+            <div
+                role="status"
+                class="mb-4 p-3 rounded-lg text-sm font-medium"
+                style="background:#D1FAE5; color:#065F46; border:1px solid #6EE7B7;"
+            >
+                Data layanan berhasil disimpan.
+            </div>
+        )
+    }
+    {
+        error && (
+            <div
+                role="alert"
+                class="mb-4 p-3 rounded-lg text-sm font-medium"
+                style="background:#FEE2E2; color:#991B1B; border:1px solid #FCA5A5;"
+            >
+                Operasi gagal. Silakan coba lagi.
+            </div>
+        )
+    }
+
+    <div class="flex items-center justify-between mb-6 gap-3 flex-wrap">
+        <h2
+            class="font-heading font-bold text-xl"
+            style="color:var(--color-primary);"
+        >
+            Kelola Layanan Kelurahan
+        </h2>
+        <a
+            href="/admin/layanan/new"
+            class="px-4 py-2 rounded-lg font-heading font-semibold text-white text-sm"
+            style="background:var(--color-cta); min-height:44px; display:flex; align-items:center;"
+        >
+            + Tambah Layanan
+        </a>
+    </div>
+
+    <div
+        class="bg-white rounded-xl border border-border overflow-hidden"
+        style="box-shadow:var(--shadow-sm);"
+    >
+        {
+            layananData.length === 0 ? (
+                <div class="p-8 text-center text-text-muted">
+                    Belum ada data layanan.
+                </div>
+            ) : (
+                <div class="divide-y divide-border">
+                    {layananData.map((cat, catIndex) => (
+                        <section class="p-5">
+                            <div class="mb-3">
+                                <h3
+                                    class="font-heading font-semibold text-lg"
+                                    style="color:var(--color-primary);"
+                                >
+                                    {cat.title}
+                                </h3>
+                                <p class="text-xs text-text-muted">
+                                    ID: {cat.id} • Icon: {cat.icon}
+                                </p>
+                            </div>
+
+                            <div class="space-y-3">
+                                {cat.items.map((item, itemIndex) => (
+                                    <article class="border border-border rounded-lg p-4">
+                                        <div class="flex items-start justify-between gap-3">
+                                            <div>
+                                                <h4 class="font-heading font-semibold text-base">
+                                                    {item.nama}
+                                                </h4>
+                                                <p class="text-sm text-text-muted mt-1 line-clamp-2">
+                                                    {item.deskripsi}
+                                                </p>
+                                                <p class="text-xs text-text-muted mt-2">
+                                                    Estimasi:{" "}
+                                                    <strong>
+                                                        {item.estimasi}
+                                                    </strong>{" "}
+                                                    • Biaya:{" "}
+                                                    <strong>
+                                                        {item.biaya}
+                                                    </strong>
+                                                </p>
+                                            </div>
+                                            <div class="flex items-center gap-2 shrink-0">
+                                                <a
+                                                    href={`/admin/layanan/${catIndex}/${itemIndex}`}
+                                                    class="px-3 py-1.5 rounded-md text-xs font-heading font-medium border hover:bg-primary hover:text-white"
+                                                    style="border-color:var(--color-primary); color:var(--color-primary);"
+                                                >
+                                                    Sunting
+                                                </a>
+                                                <form
+                                                    method="POST"
+                                                    action="/api/admin/layanan"
+                                                    onsubmit="return confirm('Hapus layanan ini?')"
+                                                >
+                                                    <input
+                                                        type="hidden"
+                                                        name="_action"
+                                                        value="delete"
+                                                    />
+                                                    <input
+                                                        type="hidden"
+                                                        name="cat_index"
+                                                        value={catIndex}
+                                                    />
+                                                    <input
+                                                        type="hidden"
+                                                        name="item_index"
+                                                        value={itemIndex}
+                                                    />
+                                                    <input
+                                                        type="hidden"
+                                                        name="back"
+                                                        value="/admin/layanan?saved=1"
+                                                    />
+                                                    <button
+                                                        type="submit"
+                                                        class="px-3 py-1.5 rounded-md text-xs font-heading font-medium border hover:bg-red-600 hover:text-white"
+                                                        style="border-color:#DC2626; color:#DC2626;"
+                                                    >
+                                                        Hapus
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </article>
+                                ))}
+                            </div>
+                        </section>
+                    ))}
+                </div>
+            )
+        }
+    </div>
+</AdminLayout>

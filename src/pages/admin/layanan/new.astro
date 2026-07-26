@@ -1,0 +1,77 @@
+---
+import AdminLayout from '../../../components/AdminLayout.astro';
+---
+
+<AdminLayout title="Tambah Layanan" breadcrumb="Layanan / Tambah">
+  <div class="max-w-3xl">
+    <h2 class="font-heading font-bold text-xl mb-6" style="color:var(--color-primary);">Tambah Layanan Baru</h2>
+
+    <form method="POST" action="/api/admin/layanan" class="space-y-5">
+      <input type="hidden" name="_action" value="create" />
+      <input type="hidden" name="back" value="/admin/layanan?saved=1" />
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label for="cat_id" class="block font-heading font-medium text-sm mb-1.5">Kategori ID *</label>
+          <input id="cat_id" name="cat_id" required placeholder="contoh: kependudukan"
+            class="w-full rounded-lg border px-4 py-3 text-base" style="border-color:var(--color-border); min-height:44px;" />
+        </div>
+        <div>
+          <label for="cat_icon" class="block font-heading font-medium text-sm mb-1.5">Icon Lucide *</label>
+          <input id="cat_icon" name="cat_icon" required value="file-text"
+            class="w-full rounded-lg border px-4 py-3 text-base" style="border-color:var(--color-border); min-height:44px;" />
+        </div>
+      </div>
+
+      <div>
+        <label for="cat_title" class="block font-heading font-medium text-sm mb-1.5">Nama Kategori *</label>
+        <input id="cat_title" name="cat_title" required
+          class="w-full rounded-lg border px-4 py-3 text-base" style="border-color:var(--color-border); min-height:44px;" />
+      </div>
+
+      <div>
+        <label for="cat_description" class="block font-heading font-medium text-sm mb-1.5">Deskripsi Kategori *</label>
+        <input id="cat_description" name="cat_description" required
+          class="w-full rounded-lg border px-4 py-3 text-base" style="border-color:var(--color-border); min-height:44px;" />
+      </div>
+
+      <hr class="border-border" />
+
+      <div>
+        <label for="nama" class="block font-heading font-medium text-sm mb-1.5">Nama Layanan *</label>
+        <input id="nama" name="nama" required
+          class="w-full rounded-lg border px-4 py-3 text-base" style="border-color:var(--color-border); min-height:44px;" />
+      </div>
+
+      <div>
+        <label for="deskripsi" class="block font-heading font-medium text-sm mb-1.5">Deskripsi Layanan *</label>
+        <textarea id="deskripsi" name="deskripsi" rows="4" required
+          class="w-full rounded-lg border px-4 py-3 text-base" style="border-color:var(--color-border);"></textarea>
+      </div>
+
+      <div>
+        <label for="syarat_raw" class="block font-heading font-medium text-sm mb-1.5">Syarat (satu baris satu syarat)</label>
+        <textarea id="syarat_raw" name="syarat_raw" rows="5"
+          class="w-full rounded-lg border px-4 py-3 text-base" style="border-color:var(--color-border);"></textarea>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label for="estimasi" class="block font-heading font-medium text-sm mb-1.5">Estimasi</label>
+          <input id="estimasi" name="estimasi" value="1 Hari Kerja"
+            class="w-full rounded-lg border px-4 py-3 text-base" style="border-color:var(--color-border); min-height:44px;" />
+        </div>
+        <div>
+          <label for="biaya" class="block font-heading font-medium text-sm mb-1.5">Biaya</label>
+          <input id="biaya" name="biaya" value="Gratis"
+            class="w-full rounded-lg border px-4 py-3 text-base" style="border-color:var(--color-border); min-height:44px;" />
+        </div>
+      </div>
+
+      <div class="sticky bottom-0 bg-white border-t border-border -mx-4 md:-mx-6 px-4 md:px-6 py-3 flex justify-end gap-3" style="box-shadow:0 -2px 8px rgba(0,0,0,.06);">
+        <a href="/admin/layanan" class="px-4 py-2 rounded-lg font-heading font-medium text-sm border hover:bg-sand" style="border-color:var(--color-border); min-height:44px; display:flex; align-items:center;">Batal</a>
+        <button type="submit" class="px-5 py-2 rounded-lg font-heading font-semibold text-white text-sm" style="background:var(--color-cta); min-height:44px;">Simpan</button>
+      </div>
+    </form>
+  </div>
+</AdminLayout>

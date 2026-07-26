@@ -1,373 +1,791 @@
 ---
-import Layout from '../components/Layout.astro';
-import { getPublishedWisata } from '../lib/db/wisata';
-import { getPublishedUmkm } from '../lib/db/umkm';
-import { getPublishedBerita, formatTanggal, excerpt } from '../lib/db/berita';
-import { getPengaturan } from '../lib/db/pengaturan';
-import { getSection } from '../lib/db/page-section';
-import { getCoversForType, mediaUrl } from '../lib/db/media';
-import { getEnv } from '@lib/env';
+import Layout from "../components/Layout.astro";
+import { getPublishedWisata } from "../lib/db/wisata";
+import { getPublishedUmkm } from "../lib/db/umkm";
+import { getPublishedBerita, formatTanggal, excerpt } from "../lib/db/berita";
+import { getPengaturan } from "../lib/db/pengaturan";
+import { getSection } from "../lib/db/page-section";
+import { getCoversForType, mediaUrl } from "../lib/db/media";
+import { getEnv } from "@lib/env";
 
 const env = getEnv();
 
-const [wisataList, umkmList, beritaList, s, petaCounts, hero, sekilas, wisataCovers, umkmCovers, beritaCovers] = await Promise.all([
-  env ? getPublishedWisata(env.DB) : [],
-  env ? getPublishedUmkm(env.DB) : [],
-  env ? getPublishedBerita(env.DB, 3) : [],
-  env ? getPengaturan(env.DB) : {},
-  env ? env.DB.prepare('SELECT jenis, COUNT(*) AS n FROM titik_peta GROUP BY jenis').all<{ jenis: string; n: number }>() : { results: [] },
-  env ? getSection('beranda-hero', env.DB) : null,
-  env ? getSection('beranda-sekilas', env.DB) : null,
-  env ? getCoversForType('wisata', env.DB) : new Map(),
-  env ? getCoversForType('umkm', env.DB) : new Map(),
-  env ? getCoversForType('berita', env.DB) : new Map(),
+const [
+    wisataList,
+    umkmList,
+    beritaList,
+    s,
+    petaCounts,
+    hero,
+    sekilas,
+    wisataCovers,
+    umkmCovers,
+    beritaCovers,
+] = await Promise.all([
+    env ? getPublishedWisata(env.DB) : [],
+    env ? getPublishedUmkm(env.DB) : [],
+    env ? getPublishedBerita(env.DB, 3) : [],
+    env ? getPengaturan(env.DB) : {},
+    env
+        ? env.DB.prepare(
+              "SELECT jenis, COUNT(*) AS n FROM titik_peta GROUP BY jenis",
+          ).all<{ jenis: string; n: number }>()
+        : { results: [] },
+    env ? getSection("beranda-hero", env.DB) : null,
+    env ? getSection("beranda-sekilas", env.DB) : null,
+    env ? getCoversForType("wisata", env.DB) : new Map(),
+    env ? getCoversForType("umkm", env.DB) : new Map(),
+    env ? getCoversForType("berita", env.DB) : new Map(),
 ]);
 
-const fmt = (n: number) => n.toLocaleString('id-ID');
-const dusunData: { l: number; p: number }[] = JSON.parse(s.stat_dusun ?? '[]');
+const fmt = (n: number) => n.toLocaleString("id-ID");
+const dusunData: { l: number; p: number }[] = JSON.parse(s.stat_dusun ?? "[]");
 const dusunCount = dusunData.length;
 const totalPenduduk = dusunData.reduce((sum, d) => sum + d.l + d.p, 0);
-const petaCountByJenis = Object.fromEntries(petaCounts.results.map(r => [r.jenis, r.n]));
+const petaCountByJenis = Object.fromEntries(
+    petaCounts.results.map((r) => [r.jenis, r.n]),
+);
 
 const demoWisata = [
-  { slug: 'pantai-loji', nama: 'Pantai Loji', img: '/images/pantai_loji.png', tag: 'Pantai', desc: 'Garis pantai sepanjang ±4 km di tepi Samudra Hindia, bagian kawasan Geopark Ciletuh-Palabuhanratu.' },
-  { slug: 'danau-talanca', nama: 'Danau Talanca', img: '/images/pantai_loji.png', tag: 'Wisata Air', desc: 'Danau seluas 20 hektar berpotensi untuk wisata air dan perikanan.' },
-  { slug: 'puncak-gelendrung', nama: 'Puncak Gelendrung', img: '/images/pantai_loji.png', tag: 'Alam', desc: 'Puncak di kawasan Gunung Rompang yang cocok untuk wisata alam dan paralayang.' },
+    {
+        slug: "pantai-loji",
+        nama: "Pantai Loji",
+        img: "/images/pantai_loji.png",
+        tag: "Pantai",
+        desc: "Garis pantai sepanjang ±4 km di tepi Samudra Hindia, bagian kawasan Geopark Ciletuh-Palabuhanratu.",
+    },
+    {
+        slug: "danau-talanca",
+        nama: "Danau Talanca",
+        img: "/images/pantai_loji.png",
+        tag: "Wisata Air",
+        desc: "Danau seluas 20 hektar berpotensi untuk wisata air dan perikanan.",
+    },
+    {
+        slug: "puncak-gelendrung",
+        nama: "Puncak Gelendrung",
+        img: "/images/pantai_loji.png",
+        tag: "Alam",
+        desc: "Puncak di kawasan Gunung Rompang yang cocok untuk wisata alam dan paralayang.",
+    },
 ];
 
-const demoUmkm: Array<{slug:string;nama:string;kategori:string;img:string;wa:string|null;desc:string}> = [];
+const demoUmkm: Array<{
+    slug: string;
+    nama: string;
+    kategori: string;
+    img: string;
+    wa: string | null;
+    desc: string;
+}> = [];
 
 const demoBerita = [
-  { slug: 'gotong-royong-bersih-pantai', judul: 'Gotong Royong Bersih Pantai Loji Menyambut Musim Kunjungan', published_at: '2026-07-12', img: '/images/gotong_royong.png', ringkasan: 'Warga bersama Karang Taruna membersihkan pesisir Pantai Loji dalam rangka menyambut meningkatnya kunjungan wisatawan.' },
-  { slug: 'pelatihan-digital-umkm', judul: 'Pelatihan Digital untuk UMKM Kelurahan', published_at: '2026-07-08', img: '/images/pelatihan_umkm.png', ringkasan: 'Sepuluh pelaku UMKM mengikuti pelatihan foto produk dan WhatsApp Business.' },
-  { slug: 'peluncuran-situs-resmi', judul: 'Peluncuran Situs Resmi Kelurahan Palabuhanratu', published_at: '2026-07-01', img: '/images/pelatihan_umkm.png', ringkasan: 'Kelurahan Palabuhanratu kini punya kehadiran digital resmi yang dapat diakses siapa saja.' },
+    {
+        slug: "gotong-royong-bersih-pantai",
+        judul: "Gotong Royong Bersih Pantai Loji Menyambut Musim Kunjungan",
+        published_at: "2026-07-12",
+        img: "/images/gotong_royong.png",
+        ringkasan:
+            "Warga bersama Karang Taruna membersihkan pesisir Pantai Loji dalam rangka menyambut meningkatnya kunjungan wisatawan.",
+    },
+    {
+        slug: "pelatihan-digital-umkm",
+        judul: "Pelatihan Digital untuk UMKM Kelurahan",
+        published_at: "2026-07-08",
+        img: "/images/pelatihan_umkm.png",
+        ringkasan:
+            "Sepuluh pelaku UMKM mengikuti pelatihan foto produk dan WhatsApp Business.",
+    },
+    {
+        slug: "peluncuran-situs-resmi",
+        judul: "Peluncuran Situs Resmi Kelurahan Palabuhanratu",
+        published_at: "2026-07-01",
+        img: "/images/pelatihan_umkm.png",
+        ringkasan:
+            "Kelurahan Palabuhanratu kini punya kehadiran digital resmi yang dapat diakses siapa saja.",
+    },
 ];
 
 const getWisataImg = (slug: string) => {
-  if (slug === 'pantai-loji') return '/images/pantai_loji.png';
-  if (slug === 'pantai-karang-sari') return '/images/karang_sari.png';
-  return '/images/pantai_loji.png';
+    if (slug === "pantai-loji") return "/images/pantai_loji.png";
+    if (slug === "pantai-karang-sari") return "/images/karang_sari.png";
+    return "/images/pantai_loji.png";
 };
 
 const getUmkmImg = (slug: string) => {
-  if (slug === 'kerajinan-bambu-loji') return '/images/kerajinan_bambu.png';
-  if (slug === 'warung-ikan-bakar-bu-sari') return '/images/ikan_bakar.png';
-  if (slug === 'kebun-sayur-pak-budi') return '/images/kebun_sayur.png';
-  return '/images/kerajinan_bambu.png';
+    if (slug === "kerajinan-bambu-loji") return "/images/kerajinan_bambu.png";
+    if (slug === "warung-ikan-bakar-bu-sari") return "/images/ikan_bakar.png";
+    if (slug === "kebun-sayur-pak-budi") return "/images/kebun_sayur.png";
+    return "/images/kerajinan_bambu.png";
 };
 
-const finalWisata = wisataList.length > 0
-  ? wisataList.slice(0, 3).map(w => {
-      const cover = wisataCovers.get(w.id);
-      return { slug: w.slug, nama: w.nama, img: cover ? mediaUrl(cover) : getWisataImg(w.slug), tag: 'Wisata', desc: excerpt(w.deskripsi_html, 100) };
-    })
-  : demoWisata;
+const finalWisata =
+    wisataList.length > 0
+        ? wisataList.slice(0, 3).map((w) => {
+              const cover = wisataCovers.get(w.id);
+              return {
+                  slug: w.slug,
+                  nama: w.nama,
+                  img: cover ? mediaUrl(cover) : getWisataImg(w.slug),
+                  tag: "Wisata",
+                  desc: excerpt(w.deskripsi_html, 100),
+              };
+          })
+        : demoWisata;
 
-const finalUmkm = umkmList.length > 0
-  ? umkmList.slice(0, 4).map(u => {
-      const cover = umkmCovers.get(u.id);
-      return { slug: u.slug, nama: u.nama, kategori: u.kategori, img: cover ? mediaUrl(cover) : getUmkmImg(u.slug), wa: u.wa_number ?? null, desc: u.deskripsi_html ? excerpt(u.deskripsi_html, 80) : '' };
-    })
-  : demoUmkm;
+const finalUmkm =
+    umkmList.length > 0
+        ? umkmList.slice(0, 4).map((u) => {
+              const cover = umkmCovers.get(u.id);
+              return {
+                  slug: u.slug,
+                  nama: u.nama,
+                  kategori: u.kategori,
+                  img: cover ? mediaUrl(cover) : getUmkmImg(u.slug),
+                  wa: u.wa_number ?? null,
+                  desc: u.deskripsi_html ? excerpt(u.deskripsi_html, 80) : "",
+              };
+          })
+        : demoUmkm;
 
-const finalBerita = beritaList.length > 0
-  ? beritaList.map(b => {
-      const cover = beritaCovers.get(b.id);
-      return { slug: b.slug, judul: b.judul, published_at: b.published_at ?? '', img: cover ? mediaUrl(cover) : null, ringkasan: excerpt(b.content_html, 120) };
-    })
-  : demoBerita;
+const finalBerita =
+    beritaList.length > 0
+        ? beritaList.map((b) => {
+              const cover = beritaCovers.get(b.id);
+              return {
+                  slug: b.slug,
+                  judul: b.judul,
+                  published_at: b.published_at ?? "",
+                  img: cover ? mediaUrl(cover) : null,
+                  ringkasan: excerpt(b.content_html, 120),
+              };
+          })
+        : demoBerita;
 ---
 
 <Layout
-  title="Kelurahan Palabuhanratu - Website Kelurahan"
-  description="Situs resmi Pemerintah Kelurahan Palabuhanratu, Kecamatan Palabuhanratu, Kabupaten Sukabumi. Jelajahi wisata bahari, UMKM lokal, dan potensi kelurahan pesisir yang memukau."
-  transparentNav={true}
+    title="Kelurahan Palabuhanratu - Website Kelurahan"
+    description="Situs resmi Pemerintah Kelurahan Palabuhanratu, Kecamatan Palabuhanratu, Kabupaten Sukabumi. Jelajahi wisata bahari, UMKM lokal, dan potensi kelurahan pesisir yang memukau."
+    transparentNav={true}
 >
-
-<!-- ── Hero ──────────────────────────────────────────────────── -->
-<section
-  class="relative overflow-hidden"
-  style="min-height: 78vh;"
-  aria-labelledby="hero-heading"
->
-  <!-- Background photo -->
-  <div
-    class="absolute inset-0 bg-cover bg-center"
-    style="background-image: url('/images/pantai_loji.png');"
-    role="img"
-    aria-label="Pantai Loji, pesisir selatan Sukabumi"
-  ></div>
-  <!-- Gradient overlay -->
-  <div class="absolute inset-0" style="background: linear-gradient(to bottom, rgba(10,54,80,0.55) 0%, rgba(10,54,80,0.35) 45%, rgba(10,54,80,0.75) 100%);"></div>
-
-  <!-- Content -->
-  <div class="relative mx-auto max-w-[1152px] px-4 sm:px-6 flex flex-col justify-end" style="min-height: 78vh; padding-bottom: 6rem;">
-    <span class="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm text-white text-xs font-heading font-semibold px-3 py-1 rounded-full w-max mb-4">
-      <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
-      Gerbang Geopark Ciletuh
-    </span>
-    <h1 id="hero-heading" class="font-heading font-extrabold text-white text-4xl sm:text-5xl lg:text-6xl leading-tight max-w-2xl">
-      Jelajahi<br/>Palabuhanratu
-    </h1>
-    <div
-      class="text-white/85 text-lg mt-3 max-w-xl"
-      set:html={hero?.content_html ?? '<p>Kelurahan pesisir di Kecamatan Simpenan, Sukabumi, gerbang menuju Geopark Ciletuh-Palabuhanratu. Pantai sepanjang 4 km, kearifan lokal, dan UMKM warga yang terus berkembang.</p>'}
-    />
-    <div class="flex flex-wrap gap-3 mt-6">
-      <a href="/wisata" class="inline-flex items-center gap-2 bg-accent hover:bg-[#0a7d88] text-white font-heading font-semibold px-5 py-3 rounded-lg transition-colors min-h-[44px]">
-        <i data-lucide="compass" class="w-5 h-5"></i> Mulai Jelajahi
-      </a>
-      <a href="/peta" class="inline-flex items-center gap-2 bg-white/15 hover:bg-white/25 backdrop-blur text-white font-heading font-semibold px-5 py-3 rounded-lg transition-colors border border-white/30 min-h-[44px]">
-        <i data-lucide="map" class="w-5 h-5"></i> Lihat Peta
-      </a>
-    </div>
-  </div>
-</section>
-
-<!-- ── Discovery Tiles (image overlay, matching beranda-v2 mockup) ── -->
-<section class="relative z-20 -mt-16 sm:-mt-20">
-  <div class="mx-auto max-w-[1152px] px-4 sm:px-6">
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-      {[
-        { href: '/wisata', label: 'Wisata', img: '/images/tile_wisata.png' },
-        { href: '/umkm', label: 'UMKM', img: '/images/tile_umkm.png' },
-        { href: '/layanan', label: 'Layanan Kelurahan', img: '/images/tile_layanan.png' },
-        { href: '/berita', label: 'Berita', img: '/images/tile_berita.png' },
-      ].map(tile => (
-        <a
-          href={tile.href}
-          class="tile group relative block rounded-2xl overflow-hidden h-44 sm:h-56 shadow-[0_4px_10px_rgba(15,36,51,.08)] hover:shadow-[0_16px_32px_rgba(15,36,51,.16)] transition-shadow"
+    <!-- ── Hero ──────────────────────────────────────────────────── -->
+    <section
+        class="relative overflow-hidden"
+        style="min-height: 78vh;"
+        aria-labelledby="hero-heading"
+    >
+        <!-- Background photo -->
+        <div
+            class="absolute inset-0 bg-cover bg-center"
+            style="background-image: url('/images/pantai_loji.png');"
+            role="img"
+            aria-label="Pantai Loji, pesisir selatan Sukabumi"
         >
-          <img
-            src={tile.img}
-            alt={tile.label}
-            class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            loading="lazy"
-          />
-          <div class="absolute inset-0 bg-gradient-to-t from-[#0A3650]/90 to-[#0A3650]/10 opacity-70 group-hover:opacity-85 transition-opacity duration-200"></div>
-          <div class="absolute inset-x-0 bottom-0 p-4 sm:p-5 flex items-center justify-between text-white">
-            <span class="font-heading font-bold text-lg sm:text-xl">{tile.label}</span>
-            <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200"></i>
-          </div>
-        </a>
-      ))}
-    </div>
-  </div>
-</section>
-
-<!-- ── Selamat Datang (editorial intro, centered) ──────────────── -->
-<section class="mx-auto max-w-[1152px] px-4 sm:px-6 pt-16 pb-6 text-center" aria-labelledby="welcome-heading">
-  <span class="text-accent font-heading font-semibold">Selamat Datang di Kelurahan Palabuhanratu</span>
-  <h2 id="welcome-heading" class="text-3xl sm:text-4xl font-heading font-extrabold text-primary mt-2 max-w-2xl mx-auto leading-tight">
-    {sekilas?.title ?? 'Kelurahan pesisir yang ramah, kaya alam, dan terbuka untuk dunia'}
-  </h2>
-  <div
-    class="text-muted text-lg mt-4 max-w-2xl mx-auto"
-    set:html={sekilas?.content_html ?? `<p>Berdiri sejak 1976 di Kecamatan Simpenan, Kabupaten Sukabumi, Kelurahan Palabuhanratu dikenal sebagai lumbung padi wilayah Palabuhanratu sekaligus rumah bagi ${fmt(totalPenduduk)} warga di ${dusunCount} dusun. Dengan garis pantai sepanjang 4 km dan posisinya sebagai gerbang Geopark Ciletuh-Palabuhanratu, Loji menyambut siapa pun yang ingin menikmati wisata bahari, mengenal budaya pesisir, dan mendukung UMKM lokal.</p>`}
-  />
-</section>
-
-<!-- ── Hal yang Bisa Dilakukan (1 big + 2 small cards) ──────────── -->
-<section class="py-10 pb-16" style="background-color: #F8FAFC;" aria-labelledby="aktivitas-heading">
-  <div class="mx-auto max-w-[1152px] px-4 sm:px-6">
-    <div class="flex items-end justify-between mb-6">
-      <h2 id="aktivitas-heading" class="font-heading font-extrabold text-2xl sm:text-3xl text-primary">Hal yang Bisa Dilakukan</h2>
-      <a href="/wisata" class="hidden sm:inline-flex items-center gap-1.5 text-primary font-heading font-semibold hover:underline">
-        Semua wisata <i data-lucide="arrow-right" class="w-4 h-4"></i>
-      </a>
-    </div>
-    <div class="grid lg:grid-cols-2 gap-6">
-      <!-- Big card (left) -->
-      <a href={`/wisata/${finalWisata[0]?.slug ?? 'pantai-loji'}`}
-         class="group relative block rounded-2xl overflow-hidden h-80 lg:h-full min-h-[20rem] shadow-[0_4px_10px_rgba(15,36,51,.08)] hover:shadow-[0_16px_32px_rgba(15,36,51,.16)] transition-shadow">
-        <img
-          src={finalWisata[0]?.img || '/images/pantai_loji.png'}
-          alt={finalWisata[0]?.nama ?? 'Pantai Loji'}
-          class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          loading="lazy"
-        />
-        <div class="absolute inset-0 bg-gradient-to-t from-[#0A3650]/90 to-transparent"></div>
-        <div class="absolute bottom-0 p-6 text-white">
-          <span class="text-[13px] font-heading font-semibold px-2.5 py-1 rounded-full bg-accent/90">{finalWisata[0]?.tag ?? 'Pantai'}</span>
-          <h3 class="font-heading font-bold text-2xl mt-2">{finalWisata[0]?.nama ?? 'Pantai Loji'}</h3>
-          <p class="text-white/85 mt-1 max-w-md">{finalWisata[0]?.desc ?? 'Pasir, ombak selatan, dan matahari terbenam: titik awal menjelajah Geopark Ciletuh.'}</p>
         </div>
-      </a>
-      <!-- Two small cards (right) -->
-      <div class="grid sm:grid-cols-2 gap-6">
-        <a href={`/wisata/${finalWisata[1]?.slug ?? 'danau-talanca'}`}
-           class="group block bg-white border border-line rounded-2xl overflow-hidden shadow-[0_4px_10px_rgba(15,36,51,.08)] hover:shadow-[0_16px_32px_rgba(15,36,51,.16)] hover:border-accent transition-all">
-          <div class="aspect-[4/3] overflow-hidden">
-            <img
-              src={finalWisata[1]?.img || '/images/karang_sari.png'}
-              alt={finalWisata[1]?.nama ?? 'Danau Talanca'}
-              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              loading="lazy"
+        <!-- Gradient overlay -->
+        <div
+            class="absolute inset-0"
+            style="background: linear-gradient(to bottom, rgba(10,54,80,0.55) 0%, rgba(10,54,80,0.35) 45%, rgba(10,54,80,0.75) 100%);"
+        >
+        </div>
+
+        <!-- Content -->
+        <div
+            class="relative mx-auto max-w-[1152px] px-4 sm:px-6 flex flex-col justify-end"
+            style="min-height: 78vh; padding-bottom: 6rem;"
+        >
+            <span
+                class="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm text-white text-xs font-heading font-semibold px-3 py-1 rounded-full w-max mb-4"
+            >
+                <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
+                Gerbang Geopark Ciletuh
+            </span>
+            <h1
+                id="hero-heading"
+                class="font-heading font-extrabold text-white text-4xl sm:text-5xl lg:text-6xl leading-tight max-w-2xl"
+            >
+                Jelajahi<br />Palabuhanratu
+            </h1>
+            <div
+                class="text-white/85 text-lg mt-3 max-w-xl"
+                set:html={hero?.content_html ??
+                    "<p>Kelurahan pesisir di Kecamatan Simpenan, Sukabumi, gerbang menuju Geopark Ciletuh-Palabuhanratu. Pantai sepanjang 4 km, kearifan lokal, dan UMKM warga yang terus berkembang.</p>"}
             />
-          </div>
-          <div class="p-5">
-            <span class="text-[13px] font-heading font-semibold px-2.5 py-1 rounded-full bg-[#E0F5F7] text-[#0A6B74]">{finalWisata[1]?.tag ?? 'Budaya'}</span>
-            <h3 class="font-heading font-bold text-lg text-ink mt-2 group-hover:text-primary transition-colors">{finalWisata[1]?.nama ?? 'Danau Talanca'}</h3>
-            <p class="text-sm text-muted mt-1">{finalWisata[1]?.desc ?? 'Danau 20 hektar untuk wisata air dan perikanan.'}</p>
-          </div>
-        </a>
-        <a href={`/wisata/${finalWisata[2]?.slug ?? 'geopark-ciletuh'}`}
-           class="group block bg-white border border-line rounded-2xl overflow-hidden shadow-[0_4px_10px_rgba(15,36,51,.08)] hover:shadow-[0_16px_32px_rgba(15,36,51,.16)] hover:border-accent transition-all">
-          <div class="aspect-[4/3] overflow-hidden">
-            <img
-              src={finalWisata[2]?.img || '/images/geopark_ciletuh.png'}
-              alt={finalWisata[2]?.nama ?? 'Geopark Ciletuh'}
-              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              loading="lazy"
-            />
-          </div>
-          <div class="p-5">
-            <span class="text-[13px] font-heading font-semibold px-2.5 py-1 rounded-full bg-[#E0F5F7] text-[#0A6B74]">{finalWisata[2]?.tag ?? 'Alam'}</span>
-            <h3 class="font-heading font-bold text-lg text-ink mt-2 group-hover:text-primary transition-colors">{finalWisata[2]?.nama ?? 'Geopark Ciletuh'}</h3>
-            <p class="text-sm text-muted mt-1">{finalWisata[2]?.desc ?? 'Pintu masuk kawasan Geopark Ciletuh-Palabuhanratu.'}</p>
-          </div>
-        </a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ── UMKM Band ────────────────────────────────────────────── -->
-<section class="py-12 md:py-16" style="background-color: #0A3650;" aria-labelledby="umkm-heading">
-  <div class="mx-auto max-w-[1152px] px-4 sm:px-6">
-    <div class="flex items-end justify-between mb-6">
-      <div>
-        <span class="text-[13px] font-heading font-semibold text-accent uppercase tracking-widest">Produk Lokal</span>
-        <h2 id="umkm-heading" class="font-heading font-extrabold text-2xl sm:text-3xl text-white mt-1">UMKM Unggulan</h2>
-      </div>
-      <a href="/umkm" class="text-sm font-heading font-semibold text-accent hover:text-white flex items-center gap-1 transition-colors">
-        Lihat Semua <i data-lucide="arrow-right" class="w-4 h-4"></i>
-      </a>
-    </div>
-    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      {finalUmkm.map(u => (
-        <article class="bg-white/10 backdrop-blur rounded-2xl overflow-hidden border border-white/10 flex flex-col">
-          <a href={`/umkm/${u.slug}`} class="block aspect-[16/10] overflow-hidden relative">
-            {u.img ? (
-              <img
-                src={u.img}
-                alt={u.nama}
-                class="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                loading="lazy"
-              />
-            ) : (
-              <div class="w-full h-full" style="background: linear-gradient(135deg, #0E9AA7, #15803D);"></div>
-            )}
-          </a>
-          <div class="p-4 flex flex-col flex-1">
-            <span class="text-xs font-heading font-semibold text-accent">{u.kategori}</span>
-            <h3 class="font-heading font-semibold text-white mt-1"><a href={`/umkm/${u.slug}`} class="hover:text-accent transition-colors">{u.nama}</a></h3>
-            <p class="text-white/60 text-sm mt-1 flex-1 line-clamp-2">{u.desc}</p>
-            {u.wa ? (
-              <a href={`https://wa.me/${u.wa}`} target="_blank" rel="noopener noreferrer"
-                 class="mt-3 inline-flex items-center justify-center gap-2 bg-cta hover:bg-ctaDark text-white text-sm font-heading font-semibold py-2.5 rounded-lg transition-colors min-h-[44px]">
-                <i data-lucide="message-circle" class="w-4 h-4"></i> WhatsApp
-              </a>
-            ) : (
-              <a href={`/umkm/${u.slug}`}
-                 class="mt-3 inline-flex items-center justify-center gap-2 border-2 border-white/30 text-white text-sm font-heading font-semibold py-2.5 rounded-lg hover:border-white/60 transition-colors min-h-[44px]">
-                Lihat Detail
-              </a>
-            )}
-          </div>
-        </article>
-      ))}
-    </div>
-  </div>
-</section>
-
-<!-- ── Peta Feature ─────────────────────────────────────────── -->
-<section class="relative py-16 md:py-24 overflow-hidden" aria-labelledby="peta-heading">
-  <!-- Background -->
-  <div class="absolute inset-0">
-    <img
-      src="/images/pantai_loji.png"
-      alt=""
-      class="w-full h-full object-cover"
-      aria-hidden="true"
-      loading="lazy"
-    />
-    <div class="absolute inset-0" style="background: linear-gradient(to right, rgba(10,54,80,0.92) 0%, rgba(10,54,80,0.75) 60%, rgba(10,54,80,0.5) 100%);"></div>
-  </div>
-  <div class="relative mx-auto max-w-[1152px] px-4 sm:px-6">
-    <div class="max-w-xl text-white">
-      <span class="text-[13px] font-heading font-semibold text-accent uppercase tracking-widest">Peta Kelurahan</span>
-      <h2 id="peta-heading" class="font-heading font-extrabold text-3xl sm:text-4xl mt-2">Temukan Semua yang Ada di Palabuhanratu</h2>
-      <p class="text-white/80 mt-3 leading-relaxed">
-        Jelajahi peta interaktif Kelurahan Palabuhanratu: titik wisata, UMKM, dan potensi alam ditandai langsung di peta. Klik penanda untuk detail dan rute.
-      </p>
-      <div class="flex flex-wrap gap-4 mt-6">
-        {[
-          { icon: 'palmtree', label: `${petaCountByJenis.wisata ?? 0} Wisata`, color: '#0E9AA7' },
-          { icon: 'store', label: `${petaCountByJenis.umkm ?? 0} UMKM`, color: '#15803D' },
-          { icon: 'sprout', label: `${petaCountByJenis.potensi ?? 0} Potensi`, color: '#F4EBDD' },
-        ].map(item => (
-          <span class="flex items-center gap-2 text-sm text-white/80">
-            <i data-lucide={item.icon} class="w-4 h-4" style={`color:${item.color}`}></i>
-            {item.label}
-          </span>
-        ))}
-      </div>
-      <a href="/peta" class="inline-flex items-center gap-2 mt-6 bg-accent hover:bg-[#0a7d88] text-white font-heading font-semibold px-5 py-3 rounded-lg transition-colors min-h-[44px]">
-        <i data-lucide="map" class="w-5 h-5"></i> Buka Peta Interaktif
-      </a>
-    </div>
-  </div>
-</section>
-
-<!-- ── Berita Terbaru ───────────────────────────────────────── -->
-<section class="py-12 md:py-16" style="background-color: #F8FAFC;" aria-labelledby="berita-heading">
-  <div class="mx-auto max-w-[1152px] px-4 sm:px-6">
-    <div class="flex items-end justify-between mb-6">
-      <div>
-        <span class="text-[13px] font-heading font-semibold text-accent uppercase tracking-widest">Informasi</span>
-        <h2 id="berita-heading" class="font-heading font-extrabold text-2xl sm:text-3xl text-ink mt-1">Berita & Pengumuman</h2>
-      </div>
-      <a href="/berita" class="text-sm font-heading font-semibold text-accent hover:underline flex items-center gap-1">
-        Semua Berita <i data-lucide="arrow-right" class="w-4 h-4"></i>
-      </a>
-    </div>
-    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-      {finalBerita.map(b => (
-        <a href={`/berita/${b.slug}`} class="group flex flex-col bg-white border border-line rounded-2xl overflow-hidden shadow-[0_4px_10px_rgba(15,36,51,.08)] hover:shadow-[0_12px_24px_rgba(15,36,51,.12)] hover:border-accent transition-all h-[360px] w-full">
-          {b.img && (
-            <div class="w-full h-48 shrink-0 overflow-hidden">
-              <img
-                src={b.img}
-                alt={b.judul}
-                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                loading="lazy"
-              />
+            <div class="flex flex-wrap gap-3 mt-6">
+                <a
+                    href="/wisata"
+                    class="inline-flex items-center gap-2 bg-accent hover:bg-[#0a7d88] text-white font-heading font-semibold px-5 py-3 rounded-lg transition-colors min-h-[44px]"
+                >
+                    <i data-lucide="compass" class="w-5 h-5"></i> Mulai Jelajahi
+                </a>
+                <a
+                    href="/peta"
+                    class="inline-flex items-center gap-2 bg-white/15 hover:bg-white/25 backdrop-blur text-white font-heading font-semibold px-5 py-3 rounded-lg transition-colors border border-white/30 min-h-[44px]"
+                >
+                    <i data-lucide="map" class="w-5 h-5"></i> Lihat Peta
+                </a>
             </div>
-          )}
-          <div class="p-5 flex flex-col flex-1 overflow-hidden">
-            <time class="text-xs font-heading font-semibold text-muted">
-              {b.published_at ? formatTanggal(b.published_at) : ''}
-            </time>
-            <h3 class="font-heading font-semibold text-ink mt-1 group-hover:text-primary transition-colors leading-snug line-clamp-2">{b.judul}</h3>
-            <p class="text-sm text-muted mt-1 line-clamp-2">{b.ringkasan}</p>
-          </div>
-        </a>
-      ))}
-    </div>
-  </div>
-</section>
+        </div>
+    </section>
 
+    <!-- ── Discovery Tiles (image overlay, matching beranda-v2 mockup) ── -->
+    <section class="relative z-20 -mt-16 sm:-mt-20">
+        <div class="mx-auto max-w-[1152px] px-4 sm:px-6">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                {
+                    [
+                        {
+                            href: "/wisata",
+                            label: "Wisata",
+                            img: "/images/tile_wisata.png",
+                        },
+                        {
+                            href: "/umkm",
+                            label: "UMKM",
+                            img: "/images/tile_umkm.png",
+                        },
+                        {
+                            href: "/layanan",
+                            label: "Layanan Kelurahan",
+                            img: "/images/tile_layanan.png",
+                        },
+                        {
+                            href: "/berita",
+                            label: "Berita",
+                            img: "/images/tile_berita.png",
+                        },
+                    ].map((tile) => (
+                        <a
+                            href={tile.href}
+                            class="tile group relative block rounded-2xl overflow-hidden h-44 sm:h-56 shadow-[0_4px_10px_rgba(15,36,51,.08)] hover:shadow-[0_16px_32px_rgba(15,36,51,.16)] transition-shadow"
+                        >
+                            <img
+                                src={tile.img}
+                                alt={tile.label}
+                                class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                loading="lazy"
+                            />
+                            <div class="absolute inset-0 bg-gradient-to-t from-[#0A3650]/90 to-[#0A3650]/10 opacity-70 group-hover:opacity-85 transition-opacity duration-200" />
+                            <div class="absolute inset-x-0 bottom-0 p-4 sm:p-5 flex items-center justify-between text-white">
+                                <span class="font-heading font-bold text-lg sm:text-xl">
+                                    {tile.label}
+                                </span>
+                                <i
+                                    data-lucide="arrow-right"
+                                    class="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200"
+                                />
+                            </div>
+                        </a>
+                    ))
+                }
+            </div>
+        </div>
+    </section>
+
+    <!-- ── Selamat Datang (editorial intro, centered) ──────────────── -->
+    <section
+        class="mx-auto max-w-[1152px] px-4 sm:px-6 pt-16 pb-6 text-center"
+        aria-labelledby="welcome-heading"
+    >
+        <span class="text-accent font-heading font-semibold"
+            >Selamat Datang di Kelurahan Palabuhanratu</span
+        >
+        <h2
+            id="welcome-heading"
+            class="text-3xl sm:text-4xl font-heading font-extrabold text-primary mt-2 max-w-2xl mx-auto leading-tight"
+        >
+            {
+                sekilas?.title ??
+                    "Kelurahan pesisir yang ramah, kaya alam, dan terbuka untuk dunia"
+            }
+        </h2>
+        <div
+            class="text-muted text-lg mt-4 max-w-2xl mx-auto"
+            set:html={sekilas?.content_html ??
+                `<p>Berdiri sejak 1976 di Kecamatan Simpenan, Kabupaten Sukabumi, Kelurahan Palabuhanratu dikenal sebagai lumbung padi wilayah Palabuhanratu sekaligus rumah bagi ${fmt(totalPenduduk)} warga di ${dusunCount} dusun. Dengan garis pantai sepanjang 4 km dan posisinya sebagai gerbang Geopark Ciletuh-Palabuhanratu, Loji menyambut siapa pun yang ingin menikmati wisata bahari, mengenal budaya pesisir, dan mendukung UMKM lokal.</p>`}
+        />
+    </section>
+
+    <!-- ── Hal yang Bisa Dilakukan (1 big + 2 small cards) ──────────── -->
+    <section
+        class="py-10 pb-16"
+        style="background-color: #F8FAFC;"
+        aria-labelledby="aktivitas-heading"
+    >
+        <div class="mx-auto max-w-[1152px] px-4 sm:px-6">
+            <div class="flex items-end justify-between mb-6">
+                <h2
+                    id="aktivitas-heading"
+                    class="font-heading font-extrabold text-2xl sm:text-3xl text-primary"
+                >
+                    Hal yang Bisa Dilakukan
+                </h2>
+                <a
+                    href="/wisata"
+                    class="hidden sm:inline-flex items-center gap-1.5 text-primary font-heading font-semibold hover:underline"
+                >
+                    Semua wisata <i data-lucide="arrow-right" class="w-4 h-4"
+                    ></i>
+                </a>
+            </div>
+            <div class="grid lg:grid-cols-2 gap-6">
+                <!-- Big card (left) -->
+                <a
+                    href={`/wisata/${finalWisata[0]?.slug ?? "pantai-loji"}`}
+                    class="group relative block rounded-2xl overflow-hidden h-80 lg:h-full min-h-[20rem] shadow-[0_4px_10px_rgba(15,36,51,.08)] hover:shadow-[0_16px_32px_rgba(15,36,51,.16)] transition-shadow"
+                >
+                    <img
+                        src={finalWisata[0]?.img || "/images/pantai_loji.png"}
+                        alt={finalWisata[0]?.nama ?? "Pantai Loji"}
+                        class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                    />
+                    <div
+                        class="absolute inset-0 bg-gradient-to-t from-[#0A3650]/90 to-transparent"
+                    >
+                    </div>
+                    <div class="absolute bottom-0 p-6 text-white">
+                        <span
+                            class="text-[13px] font-heading font-semibold px-2.5 py-1 rounded-full bg-accent/90"
+                            >{finalWisata[0]?.tag ?? "Pantai"}</span
+                        >
+                        <h3 class="font-heading font-bold text-2xl mt-2">
+                            {finalWisata[0]?.nama ?? "Pantai Loji"}
+                        </h3>
+                        <p class="text-white/85 mt-1 max-w-md">
+                            {
+                                finalWisata[0]?.desc ??
+                                    "Pasir, ombak selatan, dan matahari terbenam: titik awal menjelajah Geopark Ciletuh."
+                            }
+                        </p>
+                    </div>
+                </a>
+                <!-- Two small cards (right) -->
+                <div class="grid sm:grid-cols-2 gap-6">
+                    <a
+                        href={`/wisata/${finalWisata[1]?.slug ?? "danau-talanca"}`}
+                        class="group block bg-white border border-line rounded-2xl overflow-hidden shadow-[0_4px_10px_rgba(15,36,51,.08)] hover:shadow-[0_16px_32px_rgba(15,36,51,.16)] hover:border-accent transition-all"
+                    >
+                        <div class="aspect-[4/3] overflow-hidden">
+                            <img
+                                src={finalWisata[1]?.img ||
+                                    "/images/karang_sari.png"}
+                                alt={finalWisata[1]?.nama ?? "Danau Talanca"}
+                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                loading="lazy"
+                            />
+                        </div>
+                        <div class="p-5">
+                            <span
+                                class="text-[13px] font-heading font-semibold px-2.5 py-1 rounded-full bg-[#E0F5F7] text-[#0A6B74]"
+                                >{finalWisata[1]?.tag ?? "Budaya"}</span
+                            >
+                            <h3
+                                class="font-heading font-bold text-lg text-ink mt-2 group-hover:text-primary transition-colors"
+                            >
+                                {finalWisata[1]?.nama ?? "Danau Talanca"}
+                            </h3>
+                            <p class="text-sm text-muted mt-1">
+                                {
+                                    finalWisata[1]?.desc ??
+                                        "Danau 20 hektar untuk wisata air dan perikanan."
+                                }
+                            </p>
+                        </div>
+                    </a>
+                    <a
+                        href={`/wisata/${finalWisata[2]?.slug ?? "geopark-ciletuh"}`}
+                        class="group block bg-white border border-line rounded-2xl overflow-hidden shadow-[0_4px_10px_rgba(15,36,51,.08)] hover:shadow-[0_16px_32px_rgba(15,36,51,.16)] hover:border-accent transition-all"
+                    >
+                        <div class="aspect-[4/3] overflow-hidden">
+                            <img
+                                src={finalWisata[2]?.img ||
+                                    "/images/geopark_ciletuh.png"}
+                                alt={finalWisata[2]?.nama ?? "Geopark Ciletuh"}
+                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                loading="lazy"
+                            />
+                        </div>
+                        <div class="p-5">
+                            <span
+                                class="text-[13px] font-heading font-semibold px-2.5 py-1 rounded-full bg-[#E0F5F7] text-[#0A6B74]"
+                                >{finalWisata[2]?.tag ?? "Alam"}</span
+                            >
+                            <h3
+                                class="font-heading font-bold text-lg text-ink mt-2 group-hover:text-primary transition-colors"
+                            >
+                                {finalWisata[2]?.nama ?? "Geopark Ciletuh"}
+                            </h3>
+                            <p class="text-sm text-muted mt-1">
+                                {
+                                    finalWisata[2]?.desc ??
+                                        "Pintu masuk kawasan Geopark Ciletuh-Palabuhanratu."
+                                }
+                            </p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── UMKM Band ────────────────────────────────────────────── -->
+    <section
+        class="py-12 md:py-16"
+        style="background-color: #0A3650;"
+        aria-labelledby="umkm-heading"
+    >
+        <div class="mx-auto max-w-[1152px] px-4 sm:px-6">
+            <div class="flex items-end justify-between mb-6">
+                <div>
+                    <span
+                        class="text-[13px] font-heading font-semibold text-accent uppercase tracking-widest"
+                        >Produk Lokal</span
+                    >
+                    <h2
+                        id="umkm-heading"
+                        class="font-heading font-extrabold text-2xl sm:text-3xl text-white mt-1"
+                    >
+                        UMKM Unggulan
+                    </h2>
+                </div>
+                <a
+                    href="/umkm"
+                    class="text-sm font-heading font-semibold text-accent hover:text-white flex items-center gap-1 transition-colors"
+                >
+                    Lihat Semua <i data-lucide="arrow-right" class="w-4 h-4"
+                    ></i>
+                </a>
+            </div>
+            <div class="relative">
+                <div
+                    id="umkm-slider"
+                    class="overflow-hidden"
+                    data-auto-slider
+                    data-interval="4200"
+                >
+                    <div
+                        class="flex gap-4 transition-transform duration-500 ease-out will-change-transform"
+                        data-slider-track
+                    >
+                        {
+                            finalUmkm.map((u) => (
+                                <article class="bg-white/10 backdrop-blur rounded-2xl overflow-hidden border border-white/10 flex flex-col shrink-0 basis-[86%] sm:basis-[48%] lg:basis-[31.5%]">
+                                    <a
+                                        href={`/umkm/${u.slug}`}
+                                        class="block aspect-[16/10] overflow-hidden relative"
+                                    >
+                                        {u.img ? (
+                                            <img
+                                                src={u.img}
+                                                alt={u.nama}
+                                                class="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                                                loading="lazy"
+                                            />
+                                        ) : (
+                                            <div
+                                                class="w-full h-full"
+                                                style="background: linear-gradient(135deg, #0E9AA7, #15803D);"
+                                            />
+                                        )}
+                                    </a>
+                                    <div class="p-4 flex flex-col flex-1">
+                                        <span class="text-xs font-heading font-semibold text-accent">
+                                            {u.kategori}
+                                        </span>
+                                        <h3 class="font-heading font-semibold text-white mt-1">
+                                            <a
+                                                href={`/umkm/${u.slug}`}
+                                                class="hover:text-accent transition-colors"
+                                            >
+                                                {u.nama}
+                                            </a>
+                                        </h3>
+                                        <p class="text-white/60 text-sm mt-1 flex-1 line-clamp-2">
+                                            {u.desc}
+                                        </p>
+                                        {u.wa ? (
+                                            <a
+                                                href={`https://wa.me/${u.wa}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                class="mt-3 inline-flex items-center justify-center gap-2 bg-cta hover:bg-ctaDark text-white text-sm font-heading font-semibold py-2.5 rounded-lg transition-colors min-h-[44px]"
+                                            >
+                                                <i
+                                                    data-lucide="message-circle"
+                                                    class="w-4 h-4"
+                                                />{" "}
+                                                WhatsApp
+                                            </a>
+                                        ) : (
+                                            <a
+                                                href={`/umkm/${u.slug}`}
+                                                class="mt-3 inline-flex items-center justify-center gap-2 border-2 border-white/30 text-white text-sm font-heading font-semibold py-2.5 rounded-lg hover:border-white/60 transition-colors min-h-[44px]"
+                                            >
+                                                Lihat Detail
+                                            </a>
+                                        )}
+                                    </div>
+                                </article>
+                            ))
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── Peta Feature ─────────────────────────────────────────── -->
+    <section
+        class="relative py-16 md:py-24 overflow-hidden"
+        aria-labelledby="peta-heading"
+    >
+        <!-- Background -->
+        <div class="absolute inset-0">
+            <img
+                src="/images/pantai_loji.png"
+                alt=""
+                class="w-full h-full object-cover"
+                aria-hidden="true"
+                loading="lazy"
+            />
+            <div
+                class="absolute inset-0"
+                style="background: linear-gradient(to right, rgba(10,54,80,0.92) 0%, rgba(10,54,80,0.75) 60%, rgba(10,54,80,0.5) 100%);"
+            >
+            </div>
+        </div>
+        <div class="relative mx-auto max-w-[1152px] px-4 sm:px-6">
+            <div class="max-w-xl text-white">
+                <span
+                    class="text-[13px] font-heading font-semibold text-accent uppercase tracking-widest"
+                    >Peta Kelurahan</span
+                >
+                <h2
+                    id="peta-heading"
+                    class="font-heading font-extrabold text-3xl sm:text-4xl mt-2"
+                >
+                    Temukan Semua yang Ada di Palabuhanratu
+                </h2>
+                <p class="text-white/80 mt-3 leading-relaxed">
+                    Jelajahi peta interaktif Kelurahan Palabuhanratu: titik
+                    wisata, UMKM, dan potensi alam ditandai langsung di peta.
+                    Klik penanda untuk detail dan rute.
+                </p>
+                <div class="flex flex-wrap gap-4 mt-6">
+                    {
+                        [
+                            {
+                                icon: "palmtree",
+                                label: `${petaCountByJenis.wisata ?? 0} Wisata`,
+                                color: "#0E9AA7",
+                            },
+                            {
+                                icon: "store",
+                                label: `${petaCountByJenis.umkm ?? 0} UMKM`,
+                                color: "#15803D",
+                            },
+                            {
+                                icon: "sprout",
+                                label: `${petaCountByJenis.potensi ?? 0} Potensi`,
+                                color: "#F4EBDD",
+                            },
+                        ].map((item) => (
+                            <span class="flex items-center gap-2 text-sm text-white/80">
+                                <i
+                                    data-lucide={item.icon}
+                                    class="w-4 h-4"
+                                    style={`color:${item.color}`}
+                                />
+                                {item.label}
+                            </span>
+                        ))
+                    }
+                </div>
+                <a
+                    href="/peta"
+                    class="inline-flex items-center gap-2 mt-6 bg-accent hover:bg-[#0a7d88] text-white font-heading font-semibold px-5 py-3 rounded-lg transition-colors min-h-[44px]"
+                >
+                    <i data-lucide="map" class="w-5 h-5"></i> Buka Peta Interaktif
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── Berita Terbaru ───────────────────────────────────────── -->
+    <section
+        class="py-12 md:py-16"
+        style="background-color: #F8FAFC;"
+        aria-labelledby="berita-heading"
+    >
+        <div class="mx-auto max-w-[1152px] px-4 sm:px-6">
+            <div class="flex items-end justify-between mb-6">
+                <div>
+                    <span
+                        class="text-[13px] font-heading font-semibold text-accent uppercase tracking-widest"
+                        >Informasi</span
+                    >
+                    <h2
+                        id="berita-heading"
+                        class="font-heading font-extrabold text-2xl sm:text-3xl text-ink mt-1"
+                    >
+                        Berita & Pengumuman
+                    </h2>
+                </div>
+                <a
+                    href="/berita"
+                    class="text-sm font-heading font-semibold text-accent hover:underline flex items-center gap-1"
+                >
+                    Semua Berita <i data-lucide="arrow-right" class="w-4 h-4"
+                    ></i>
+                </a>
+            </div>
+            <div class="relative">
+                <div
+                    id="berita-slider"
+                    class="overflow-hidden"
+                    data-auto-slider
+                    data-interval="3600"
+                >
+                    <div
+                        class="flex gap-5 transition-transform duration-500 ease-out will-change-transform"
+                        data-slider-track
+                    >
+                        {
+                            finalBerita.map((b) => (
+                                <a
+                                    href={`/berita/${b.slug}`}
+                                    class="group flex flex-col bg-white border border-line rounded-2xl overflow-hidden shadow-[0_4px_10px_rgba(15,36,51,.08)] hover:shadow-[0_12px_24px_rgba(15,36,51,.12)] hover:border-accent transition-all h-[360px] shrink-0 basis-[88%] sm:basis-[48%] lg:basis-[31.5%]"
+                                >
+                                    {b.img && (
+                                        <div class="w-full h-48 shrink-0 overflow-hidden">
+                                            <img
+                                                src={b.img}
+                                                alt={b.judul}
+                                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                loading="lazy"
+                                            />
+                                        </div>
+                                    )}
+                                    <div class="p-5 flex flex-col flex-1 overflow-hidden">
+                                        <time class="text-xs font-heading font-semibold text-muted">
+                                            {b.published_at
+                                                ? formatTanggal(b.published_at)
+                                                : ""}
+                                        </time>
+                                        <h3 class="font-heading font-semibold text-ink mt-1 group-hover:text-primary transition-colors leading-snug line-clamp-2">
+                                            {b.judul}
+                                        </h3>
+                                        <p class="text-sm text-muted mt-1 line-clamp-2">
+                                            {b.ringkasan}
+                                        </p>
+                                    </div>
+                                </a>
+                            ))
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 </Layout>
 
 <script is:inline>
-  document.addEventListener('DOMContentLoaded', function() {
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-  });
-  document.addEventListener('lucide:ready', function() {
-    lucide.createIcons();
-  });
-  setTimeout(function() {
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-  }, 300);
+    document.addEventListener("DOMContentLoaded", function () {
+        if (typeof lucide !== "undefined") lucide.createIcons();
+
+        function initAutoSlider(sliderEl) {
+            if (!sliderEl) return;
+            const track = sliderEl.querySelector("[data-slider-track]");
+            if (!track) return;
+
+            let cards = Array.from(track.children);
+            if (cards.length <= 1) return;
+
+            let current = 0;
+            let timer = null;
+
+            function metrics() {
+                const first = cards[0];
+                if (!first)
+                    return { cardWidth: 0, gap: 0, visible: 1, maxIndex: 0 };
+                const cardWidth = first.getBoundingClientRect().width;
+                const styles = window.getComputedStyle(track);
+                const gap = parseFloat(styles.columnGap || styles.gap || "0");
+                const visible = Math.max(
+                    1,
+                    Math.round(
+                        (sliderEl.clientWidth + gap) / (cardWidth + gap),
+                    ),
+                );
+                const maxIndex = Math.max(0, cards.length - visible);
+                return { cardWidth, gap, visible, maxIndex };
+            }
+
+            // Untuk UMKM/BERITA: jika item terlalu sedikit (mis. cuma 2-3),
+            // duplikasi agar tetap bisa auto-slide.
+            if (
+                sliderEl.id === "umkm-slider" ||
+                sliderEl.id === "berita-slider"
+            ) {
+                const originals = [...cards];
+                let safety = 0;
+                while (safety < 3) {
+                    const { visible } = metrics();
+                    if (cards.length > visible) break;
+                    originals.forEach((card) => {
+                        track.appendChild(card.cloneNode(true));
+                    });
+                    cards = Array.from(track.children);
+                    safety++;
+                }
+            }
+
+            function goTo(index) {
+                const { cardWidth, gap, maxIndex } = metrics();
+                if (!cardWidth) return;
+                current = index > maxIndex ? 0 : index < 0 ? maxIndex : index;
+                track.style.transform = `translateX(-${current * (cardWidth + gap)}px)`;
+            }
+
+            function start() {
+                const interval = Number(
+                    sliderEl.getAttribute("data-interval") || 4000,
+                );
+                const { maxIndex } = metrics();
+                if (maxIndex <= 0) return;
+                stop();
+                timer = window.setInterval(function () {
+                    goTo(current + 1);
+                }, interval);
+            }
+
+            function stop() {
+                if (timer) {
+                    window.clearInterval(timer);
+                    timer = null;
+                }
+            }
+
+            sliderEl.addEventListener("mouseenter", stop);
+            sliderEl.addEventListener("mouseleave", start);
+            window.addEventListener("resize", function () {
+                goTo(current);
+                start();
+            });
+
+            goTo(0);
+            start();
+        }
+
+        document.querySelectorAll("[data-auto-slider]").forEach(initAutoSlider);
+    });
+
+    document.addEventListener("lucide:ready", function () {
+        if (typeof lucide !== "undefined") lucide.createIcons();
+    });
+
+    setTimeout(function () {
+        if (typeof lucide !== "undefined") lucide.createIcons();
+    }, 300);
 </script>

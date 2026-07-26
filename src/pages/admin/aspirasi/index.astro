@@ -1,0 +1,78 @@
+---
+import AdminLayout from '../../../components/AdminLayout.astro';
+import { getAllAspirasi } from '../../../lib/db/aspirasi';
+import { getEnv } from '@lib/env';
+
+const env = getEnv();
+const saved = Astro.url.searchParams.get('saved');
+const error = Astro.url.searchParams.get('error');
+
+const list = env ? await getAllAspirasi(env.DB) : [];
+---
+
+<AdminLayout title="Aspirasi Masyarakat" breadcrumb="Aspirasi Masyarakat">
+  {saved && (
+    <div role="status" class="mb-4 p-3 rounded-lg text-sm font-medium" style="background:#D1FAE5; color:#065F46; border:1px solid #6EE7B7;">
+      Perubahan berhasil disimpan.
+    </div>
+  )}
+  {error && (
+    <div role="alert" class="mb-4 p-3 rounded-lg text-sm font-medium" style="background:#FEE2E2; color:#991B1B; border:1px solid #FCA5A5;">
+      Terjadi kesalahan. Coba lagi.
+    </div>
+  )}
+
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="font-heading font-bold text-xl" style="color:var(--color-primary);">Inbox Aspirasi Warga</h2>
+    <span class="text-sm text-text-muted">Total: {list.length}</span>
+  </div>
+
+  <div class="bg-white rounded-xl border border-border overflow-hidden" style="box-shadow:var(--shadow-sm);">
+    {list.length === 0 ? (
+      <div class="p-8 text-center text-text-muted">
+        <p>Belum ada aspirasi masuk.</p>
+      </div>
+    ) : (
+      <div class="divide-y divide-border">
+        {list.map((a) => (
+          <article class="p-5">
+            <div class="flex items-start justify-between gap-4">
+              <div class="min-w-0">
+                <div class="flex flex-wrap items-center gap-2 mb-1">
+                  <h3 class="font-heading font-semibold text-base">{a.nama}</h3>
+                  <span class:list={[
+                    'px-2 py-0.5 rounded-full text-[11px] font-heading font-semibold',
+                    a.status === 'baru' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'
+                  ]}>
+                    {a.status === 'baru' ? 'Baru' : 'Dibaca'}
+                  </span>
+                </div>
+                <p class="text-xs text-text-muted">{a.kontak || 'Kontak tidak diisi'} • {new Date(a.created_at).toLocaleString('id-ID')}</p>
+                <p class="text-sm text-text mt-3 whitespace-pre-wrap">{a.isi}</p>
+              </div>
+
+              <div class="flex items-center gap-2 shrink-0">
+                {a.status === 'baru' && (
+                  <form method="POST" action="/api/admin/aspirasi">
+                    <input type="hidden" name="_action" value="read" />
+                    <input type="hidden" name="id" value={a.id} />
+                    <button type="submit" class="px-3 py-1.5 rounded-md text-xs font-heading font-medium border hover:bg-sand" style="border-color:var(--color-primary); color:var(--color-primary);">
+                      Tandai Dibaca
+                    </button>
+                  </form>
+                )}
+                <form method="POST" action="/api/admin/aspirasi" onsubmit="return confirm('Hapus aspirasi ini?')">
+                  <input type="hidden" name="_action" value="delete" />
+                  <input type="hidden" name="id" value={a.id} />
+                  <button type="submit" class="px-3 py-1.5 rounded-md text-xs font-heading font-medium border hover:bg-red-600 hover:text-white" style="border-color:#DC2626; color:#DC2626;">
+                    Hapus
+                  </button>
+                </form>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+    )}
+  </div>
+</AdminLayout>
