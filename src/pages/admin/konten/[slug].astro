@@ -11,7 +11,26 @@ const section = env ? await getSection(slug, env.DB) : null;
 if (!section) return Astro.redirect('/admin/konten');
 
 const saved = Astro.url.searchParams.get('saved');
-const sectionLabel = slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+const sectionLabel = slug === 'beranda-sekilas' ? 'Beranda: Sambutan Kepala Kelurahan' : slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+
+let lurahNama = '';
+let lurahJabatan = '';
+
+if (slug === 'beranda-sekilas') {
+  if (section.cover_alt) {
+    try {
+      const parsed = JSON.parse(section.cover_alt);
+      lurahNama = parsed.nama || '';
+      lurahJabatan = parsed.jabatan || '';
+    } catch {
+      lurahNama = section.cover_alt || '';
+      lurahJabatan = 'Kepala Kelurahan Palabuhanratu';
+    }
+  } else {
+    lurahNama = 'H. Ahmad Sobirin, S.IP., M.Si.';
+    lurahJabatan = 'Kepala Kelurahan Palabuhanratu';
+  }
+}
 ---
 
 <AdminLayout title={`Edit: ${sectionLabel}`} breadcrumb={`Konten / ${sectionLabel}`}>
@@ -39,6 +58,53 @@ const sectionLabel = slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase
           style="border-color:var(--color-border); min-height:44px;"
         />
       </div>
+
+      {slug === 'beranda-sekilas' && (
+        <div class="space-y-4 p-5 border border-border rounded-xl bg-slate-50/50">
+          <h3 class="font-heading font-bold text-sm text-primary">Detail Kepala Kelurahan</h3>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="lurah_nama" class="block font-heading font-medium text-xs mb-1.5">Nama Kepala Kelurahan</label>
+              <input
+                type="text" id="lurah_nama" value={lurahNama}
+                class="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none bg-white"
+                style="border-color:var(--color-border); min-height:40px;"
+              />
+            </div>
+            <div>
+              <label for="lurah_jabatan" class="block font-heading font-medium text-xs mb-1.5">Jabatan / Gelar</label>
+              <input
+                type="text" id="lurah_jabatan" value={lurahJabatan}
+                class="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none bg-white"
+                style="border-color:var(--color-border); min-height:40px;"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="block font-heading font-medium text-xs mb-1.5">Foto Kepala Kelurahan</label>
+            <div class="flex items-center gap-4">
+              <img
+                id="lurah_preview"
+                src={section.cover_r2_key ? (section.cover_r2_key.startsWith('/') ? section.cover_r2_key : `/api/media/${encodeURIComponent(section.cover_r2_key)}`) : '/images/lurah.png'}
+                alt="Foto Lurah"
+                class="w-24 h-24 object-cover rounded-xl border border-slate-200 bg-white shadow-sm"
+              />
+              <div class="flex flex-col gap-2">
+                <label class="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg font-heading font-semibold text-xs border border-slate-200 bg-white cursor-pointer hover:bg-slate-50 transition-colors" style="min-height:36px;">
+                  Ganti Foto
+                  <input type="file" id="lurah_photo_file" accept="image/*" class="hidden" />
+                </label>
+                <p id="upload_status" class="text-[11px] text-text-muted"></p>
+                <input type="hidden" name="cover_r2_key" id="cover_r2_key" value={section.cover_r2_key || ''} />
+              </div>
+            </div>
+          </div>
+          
+          <input type="hidden" name="cover_alt" id="cover_alt_input" value={section.cover_alt || ''} />
+        </div>
+      )}
 
       <div>
         <label for="content_html" class="block font-heading font-medium text-sm mb-1.5">
@@ -88,8 +154,50 @@ const sectionLabel = slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase
   const editor = document.getElementById('editor') as HTMLDivElement;
   const hidden = document.getElementById('content_html') as HTMLInputElement;
 
+  // Handle lurah welcome photo upload
+  const lurahPhotoFile = document.getElementById('lurah_photo_file') as HTMLInputElement;
+  const lurahPreview = document.getElementById('lurah_preview') as HTMLImageElement;
+  const coverR2KeyInput = document.getElementById('cover_r2_key') as HTMLInputElement;
+  const uploadStatus = document.getElementById('upload_status') as HTMLParagraphElement;
+
+  if (lurahPhotoFile) {
+    lurahPhotoFile.addEventListener('change', async () => {
+      const file = lurahPhotoFile.files?.[0];
+      if (!file) return;
+
+      if (uploadStatus) uploadStatus.textContent = 'Mengunggah foto...';
+      try {
+        const { uploadImage } = await import('../../../scripts/admin-editor');
+        const res = await uploadImage(file, 'Foto Kepala Kelurahan', {
+          purge: '/'
+        });
+        
+        // Save the key part from R2 instead of full URL path
+        const key = res.url.replace('/api/media/', '');
+        if (coverR2KeyInput) coverR2KeyInput.value = key;
+        if (lurahPreview) lurahPreview.src = res.url;
+        if (uploadStatus) uploadStatus.textContent = 'Foto berhasil diunggah.';
+      } catch (err) {
+        console.error(err);
+        if (uploadStatus) uploadStatus.textContent = 'Upload gagal. Coba lagi.';
+      }
+    });
+  }
+
   document.querySelector('form')?.addEventListener('submit', () => {
     hidden.value = editor.innerHTML;
+
+    // Sync metadata inputs
+    const namaInput = document.getElementById('lurah_nama') as HTMLInputElement;
+    const jabatanInput = document.getElementById('lurah_jabatan') as HTMLInputElement;
+    const coverAltInput = document.getElementById('cover_alt_input') as HTMLInputElement;
+    if (namaInput && jabatanInput && coverAltInput) {
+      coverAltInput.value = JSON.stringify({
+        nama: namaInput.value,
+        jabatan: jabatanInput.value
+      });
+    }
   });
+  
   initEditor(editor, hidden);
 </script>

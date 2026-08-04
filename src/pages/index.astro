@@ -7,6 +7,7 @@ import { getPengaturan } from "../lib/db/pengaturan";
 import { getSection } from "../lib/db/page-section";
 import { getCoversForType, mediaUrl } from "../lib/db/media";
 import { getEnv } from "@lib/env";
+import sambutanData from "../data/sambutan.json";
 
 const env = getEnv();
 
@@ -45,6 +46,30 @@ const totalPenduduk = dusunData.reduce((sum, d) => sum + d.l + d.p, 0);
 const petaCountByJenis = Object.fromEntries(
     petaCounts.results.map((r) => [r.jenis, r.n]),
 );
+
+// Parse Lurah details from database (sekilas section)
+let lurahFoto = "/images/lurah.png";
+let lurahNama = "H. Ahmad Sobirin, S.IP., M.Si.";
+let lurahJabatan = "Kepala Kelurahan Palabuhanratu";
+let lurahJudul = "Sambutan Kepala Kelurahan Palabuhanratu";
+let lurahSambutanHtml = "";
+
+if (sekilas) {
+    lurahJudul = sekilas.title || lurahJudul;
+    lurahSambutanHtml = sekilas.content_html || "";
+    if (sekilas.cover_r2_key) {
+        lurahFoto = sekilas.cover_r2_key.startsWith('/') ? sekilas.cover_r2_key : `/api/media/${encodeURIComponent(sekilas.cover_r2_key)}`;
+    }
+    if (sekilas.cover_alt) {
+        try {
+            const parsed = JSON.parse(sekilas.cover_alt);
+            lurahNama = parsed.nama || lurahNama;
+            lurahJabatan = parsed.jabatan || lurahJabatan;
+        } catch {
+            lurahNama = sekilas.cover_alt;
+        }
+    }
+}
 
 const demoWisata = [
     {
@@ -282,28 +307,67 @@ const finalBerita =
         </div>
     </section>
 
-    <!-- ── Selamat Datang (editorial intro, centered) ──────────────── -->
+    <!-- ── Sambutan Kepala Kelurahan (2-column responsive layout) ── -->
     <section
-        class="mx-auto max-w-[1152px] px-4 sm:px-6 pt-16 pb-6 text-center"
-        aria-labelledby="welcome-heading"
+        class="mx-auto max-w-[1152px] px-4 sm:px-6 py-16"
+        aria-labelledby="sambutan-heading"
     >
-        <span class="text-accent font-heading font-semibold"
-            >Selamat Datang di Kelurahan Palabuhanratu</span
-        >
-        <h2
-            id="welcome-heading"
-            class="text-3xl sm:text-4xl font-heading font-extrabold text-primary mt-2 max-w-2xl mx-auto leading-tight"
-        >
-            {
-                sekilas?.title ??
-                    "Kelurahan pesisir yang ramah, kaya alam, dan terbuka untuk dunia"
-            }
-        </h2>
-        <div
-            class="text-muted text-lg mt-4 max-w-2xl mx-auto"
-            set:html={sekilas?.content_html ??
-                `<p>Berdiri sejak 1976 di Kecamatan Simpenan, Kabupaten Sukabumi, Kelurahan Palabuhanratu dikenal sebagai lumbung padi wilayah Palabuhanratu sekaligus rumah bagi ${fmt(totalPenduduk)} warga di ${dusunCount} dusun. Dengan garis pantai sepanjang 4 km dan posisinya sebagai gerbang Geopark Ciletuh-Palabuhanratu, Loji menyambut siapa pun yang ingin menikmati wisata bahari, mengenal budaya pesisir, dan mendukung UMKM lokal.</p>`}
-        />
+        <div class="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            <!-- Left Column: Photo & Credentials -->
+            <div class="lg:col-span-4 flex flex-col items-center text-center bg-white p-6 rounded-2xl border border-slate-100 shadow-md">
+                <div class="relative w-48 h-48 sm:w-56 sm:h-56">
+                    <img
+                        src={lurahFoto}
+                        alt={lurahNama}
+                        class="w-full h-full object-cover rounded-2xl shadow-lg border-4 border-white ring-4 ring-primary/10"
+                        loading="lazy"
+                    />
+                    <div class="absolute -bottom-3 -right-3 bg-accent text-white p-2.5 rounded-xl shadow-md border border-white">
+                        <i data-lucide="award" class="w-6 h-6"></i>
+                    </div>
+                </div>
+                <h3 class="font-heading font-bold text-xl text-primary mt-6">
+                    {lurahNama}
+                </h3>
+                <p class="text-sm font-semibold text-accent mt-1">
+                    {lurahJabatan}
+                </p>
+            </div>
+
+            <!-- Right Column: Welcome Message -->
+            <div class="lg:col-span-8 flex flex-col justify-center text-left">
+                <span class="text-accent font-heading font-bold tracking-wider text-xs uppercase">
+                    Sambutan Hangat
+                </span>
+                <h2
+                    id="sambutan-heading"
+                    class="text-3xl sm:text-4xl font-heading font-extrabold text-primary mt-2 mb-4 leading-tight"
+                >
+                    {lurahJudul}
+                </h2>
+                <div class="w-16 h-1.5 bg-accent rounded mb-6"></div>
+                <div class="text-muted text-base sm:text-lg space-y-4 max-w-none">
+                    {
+                        lurahSambutanHtml ? (
+                            <div set:html={lurahSambutanHtml} />
+                        ) : (
+                            sambutanData.sambutan.map((paragraf) => (
+                                <p>{paragraf}</p>
+                            ))
+                        )
+                    }
+                </div>
+                <div class="mt-8">
+                    <a
+                        href="/pemerintahan"
+                        class="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white font-heading font-semibold px-6 py-3 rounded-lg transition-all shadow-md hover:shadow-lg duration-200 group min-h-[44px]"
+                    >
+                        Lihat Pemerintahan
+                        <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
     </section>
 
     <!-- ── Hal yang Bisa Dilakukan (1 big + 2 small cards) ──────────── -->
