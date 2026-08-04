@@ -1,10 +1,18 @@
 ---
+import { getEnv } from '@lib/env';
+import { getPengaturan } from '../lib/db/pengaturan';
+
 interface Props {
   transparent?: boolean;
   currentPath?: string;
 }
 
 const { transparent = false, currentPath = '/' } = Astro.props;
+
+const env = getEnv();
+const s = env ? await getPengaturan(env.DB) : {};
+const logo = s.situs_logo;
+const logoUrl = logo ? (logo.startsWith('/') ? logo : `/api/media/${encodeURIComponent(logo)}`) : null;
 
 const navItems = [
   { href: '/', label: 'Beranda' },
@@ -30,10 +38,16 @@ const isActive = (href: string) =>
 
     <!-- Logo -->
     <a href="/" class="flex items-center gap-3 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:rounded-sm">
-      <span class="nav-logo-circle w-10 h-10 rounded-full grid place-items-center font-heading font-bold text-sm transition-colors duration-200"
+      <span class="nav-logo-circle w-10 h-10 rounded-full grid place-items-center font-heading font-bold text-sm transition-colors duration-200 overflow-hidden"
         style="background: #fff; color: var(--color-primary);"
         aria-hidden="true"
-      >KP</span>
+      >
+        {logoUrl ? (
+          <img src={logoUrl} alt="Logo" class="w-full h-full object-cover" />
+        ) : (
+          "KP"
+        )}
+      </span>
       <span class="leading-tight">
         <span class="nav-brand-title block font-heading font-bold transition-colors duration-200" style="color: #fff;">Kelurahan Palabuhanratu</span>
         <span class="nav-brand-sub block text-xs transition-colors duration-200" style="color: rgba(255,255,255,0.85);">Pemerintah Kelurahan Palabuhanratu</span>
