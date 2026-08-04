@@ -106,6 +106,49 @@ if (slug === 'beranda-sekilas') {
         </div>
       )}
 
+      {slug === 'pemerintahan-tugas-fungsi' && (
+        <div class="space-y-4 p-5 border border-border rounded-xl bg-slate-50/50">
+          <h3 class="font-heading font-bold text-sm text-primary">Daftar Kartu Tugas & Fungsi</h3>
+          <p class="text-xs text-text-muted">Tambahkan, ubah, atau hapus kartu tugas dan fungsi perangkat di bawah ini.</p>
+          
+          <div id="duties_container" class="space-y-3">
+            {/* Populated dynamically by JavaScript */}
+          </div>
+          
+          <button type="button" id="add_duty_btn" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-heading font-semibold text-xs border border-dashed border-slate-300 bg-white hover:bg-slate-50 transition-colors cursor-pointer" style="min-height:32px;">
+            + Tambah Kartu Jabatan
+          </button>
+          
+          <input type="hidden" name="cover_alt" id="cover_alt_input" value={section.cover_alt || ''} />
+        </div>
+      )}
+
+      {slug === 'pemerintahan-struktur' && (
+        <div class="space-y-4 p-5 border border-border rounded-xl bg-slate-50/50">
+          <h3 class="font-heading font-bold text-sm text-primary">Bagan Struktur Organisasi</h3>
+          <p class="text-xs text-text-muted">Unggah gambar bagan struktur organisasi Pemerintah Kelurahan Palabuhanratu di bawah ini.</p>
+          
+          <div>
+            <div class="flex flex-col gap-4">
+              <img
+                id="struktur_preview"
+                src={section.cover_r2_key ? (section.cover_r2_key.startsWith('/') ? section.cover_r2_key : `/api/media/${encodeURIComponent(section.cover_r2_key)}`) : '/images/struktur_organisasi.png'}
+                alt="Bagan Struktur Organisasi"
+                class="w-full max-w-lg object-contain rounded-xl border border-slate-200 bg-white shadow-sm"
+              />
+              <div class="flex flex-col gap-2">
+                <label class="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg font-heading font-semibold text-xs border border-slate-200 bg-white cursor-pointer hover:bg-slate-50 transition-colors self-start" style="min-height:36px;">
+                  Unggah Gambar Struktur
+                  <input type="file" id="struktur_file" accept="image/*" class="hidden" />
+                </label>
+                <p id="struktur_upload_status" class="text-[11px] text-text-muted"></p>
+                <input type="hidden" name="cover_r2_key" id="cover_r2_key" value={section.cover_r2_key || ''} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div>
         <label for="content_html" class="block font-heading font-medium text-sm mb-1.5">
           Konten
@@ -182,6 +225,145 @@ if (slug === 'beranda-sekilas') {
         if (uploadStatus) uploadStatus.textContent = 'Upload gagal. Coba lagi.';
       }
     });
+  }
+
+  // Handle Struktur Organisasi image upload
+  const strukturFile = document.getElementById('struktur_file') as HTMLInputElement;
+  const strukturPreview = document.getElementById('struktur_preview') as HTMLImageElement;
+  const strukturUploadStatus = document.getElementById('struktur_upload_status') as HTMLParagraphElement;
+
+  if (strukturFile) {
+    strukturFile.addEventListener('change', async () => {
+      const file = strukturFile.files?.[0];
+      if (!file) return;
+
+      if (strukturUploadStatus) strukturUploadStatus.textContent = 'Mengunggah gambar...';
+      try {
+        const { uploadImage } = await import('../../../scripts/admin-editor');
+        const res = await uploadImage(file, 'Bagan Struktur Organisasi', {
+          purge: '/'
+        });
+        
+        const key = res.url.replace('/api/media/', '');
+        if (coverR2KeyInput) coverR2KeyInput.value = key;
+        if (strukturPreview) strukturPreview.src = res.url;
+        if (strukturUploadStatus) strukturUploadStatus.textContent = 'Gambar bagan berhasil diunggah.';
+      } catch (err) {
+        console.error(err);
+        if (strukturUploadStatus) strukturUploadStatus.textContent = 'Upload gagal. Coba lagi.';
+      }
+    });
+  }
+
+  // Handle Tugas & Fungsi card list editor
+  const dutiesContainer = document.getElementById('duties_container');
+  const addDutyBtn = document.getElementById('add_duty_btn');
+  const coverAltInput = document.getElementById('cover_alt_input') as HTMLInputElement;
+
+  if (dutiesContainer && addDutyBtn && coverAltInput) {
+    let duties: { icon: string; title: string; desc: string }[] = [];
+    try {
+      duties = JSON.parse(coverAltInput.value);
+    } catch {
+      // Default list if empty or invalid JSON
+      duties = [
+        { icon: 'user-round', title: 'Kepala Kelurahan', desc: 'Memimpin penyelenggaraan pemerintahan, pembangunan, dan pemberdayaan masyarakat kelurahan.' },
+        { icon: 'clipboard-list', title: 'Sekretaris Kelurahan', desc: 'Membantu kepala kelurahan di bidang administrasi dan tata usaha pemerintahan.' },
+        { icon: 'wallet', title: 'Kaur Keuangan', desc: 'Mengelola keuangan dan penatausahaan anggaran kelurahan.' },
+        { icon: 'landmark', title: 'Kasi Pemerintahan', desc: 'Melaksanakan urusan pemerintahan, kependudukan, dan pertanahan.' },
+        { icon: 'heart-handshake', title: 'Kasi Kesejahteraan', desc: 'Melaksanakan pemberdayaan masyarakat dan kesejahteraan sosial.' },
+        { icon: 'clipboard-check', title: 'Kasi Pelayanan', desc: 'Menyelenggarakan pelayanan kepada masyarakat kelurahan.' }
+      ];
+    }
+
+    const availableIcons = [
+      { value: 'user-round', label: 'User / Orang' },
+      { value: 'clipboard-list', label: 'Daftar / List' },
+      { value: 'wallet', label: 'Dompet / Keuangan' },
+      { value: 'landmark', label: 'Gedung / Pemerintahan' },
+      { value: 'heart-handshake', label: 'Kesejahteraan / Sosial' },
+      { value: 'clipboard-check', label: 'Pelayanan / Centang' },
+      { value: 'users', label: 'Masyarakat / Grup' },
+      { value: 'layers', label: 'Ruang Lingkup / Lapisan' },
+      { value: 'shield', label: 'Keamanan / Shield' },
+      { value: 'book-open', label: 'Pendidikan / Buku' },
+      { value: 'briefcase', label: 'Pekerjaan / Bisnis' },
+      { value: 'map-pin', label: 'Lokasi / Peta' },
+      { value: 'info', label: 'Informasi' },
+      { value: 'file-text', label: 'Dokumen' }
+    ];
+
+    const renderDuties = () => {
+      dutiesContainer.innerHTML = '';
+      duties.forEach((duty, index) => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'flex flex-col md:flex-row gap-3 p-4 bg-white border border-slate-200 rounded-lg relative';
+        
+        let selectHtml = `<select class="duty-icon w-full md:w-40 rounded-lg border border-slate-200 px-2 py-1.5 text-xs bg-white focus:outline-none" style="min-height:36px;">`;
+        availableIcons.forEach(icon => {
+          selectHtml += `<option value="${icon.value}" ${duty.icon === icon.value ? 'selected' : ''}>${icon.label}</option>`;
+        });
+        selectHtml += `</select>`;
+
+        itemDiv.innerHTML = `
+          <div class="flex-1 space-y-2">
+            <div class="flex gap-2">
+              <div class="w-1/3 min-w-[120px]">
+                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">Ikon</label>
+                ${selectHtml}
+              </div>
+              <div class="flex-1">
+                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">Nama Jabatan</label>
+                <input type="text" class="duty-title w-full rounded-lg border border-slate-200 px-3 py-1.5 text-xs focus:outline-none" style="min-height:36px;" value="${duty.title || ''}" />
+              </div>
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">Deskripsi Peran</label>
+              <textarea class="duty-desc w-full rounded-lg border border-slate-200 px-3 py-1.5 text-xs focus:outline-none min-h-16" style="resize:vertical;">${duty.desc || ''}</textarea>
+            </div>
+          </div>
+          <div class="flex items-end justify-end md:self-start md:mt-4">
+            <button type="button" class="remove-duty-btn px-2.5 py-1.5 rounded-lg border border-red-200 hover:bg-red-50 text-red-600 text-xs font-semibold cursor-pointer">
+              Hapus
+            </button>
+          </div>
+        `;
+
+        const titleInput = itemDiv.querySelector('.duty-title') as HTMLInputElement;
+        const descInput = itemDiv.querySelector('.duty-desc') as HTMLTextAreaElement;
+        const iconSelect = itemDiv.querySelector('.duty-icon') as HTMLSelectElement;
+        const removeBtn = itemDiv.querySelector('.remove-duty-btn') as HTMLButtonElement;
+
+        const updateData = () => {
+          duties[index] = {
+            icon: iconSelect.value,
+            title: titleInput.value,
+            desc: descInput.value
+          };
+          coverAltInput.value = JSON.stringify(duties);
+        };
+
+        titleInput.addEventListener('input', updateData);
+        descInput.addEventListener('input', updateData);
+        iconSelect.addEventListener('change', updateData);
+        
+        removeBtn.addEventListener('click', () => {
+          duties.splice(index, 1);
+          coverAltInput.value = JSON.stringify(duties);
+          renderDuties();
+        });
+
+        dutiesContainer.appendChild(itemDiv);
+      });
+    };
+
+    addDutyBtn.addEventListener('click', () => {
+      duties.push({ icon: 'user-round', title: 'Jabatan Baru', desc: 'Deskripsi tugas jabatan baru.' });
+      coverAltInput.value = JSON.stringify(duties);
+      renderDuties();
+    });
+
+    renderDuties();
   }
 
   document.querySelector('form')?.addEventListener('submit', () => {

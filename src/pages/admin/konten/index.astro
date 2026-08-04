@@ -4,6 +4,20 @@ import { getAllSections } from '../../../lib/db/page-section';
 
 import { getEnv } from '@lib/env';
 const env = getEnv();
+
+if (env) {
+  await Promise.all([
+    env.DB.prepare(`
+      INSERT OR IGNORE INTO page_section (slug, title, content_html, cover_alt) 
+      VALUES ('pemerintahan-struktur', 'Pemerintahan: Struktur Organisasi', '<p>Bagan struktur organisasi Pemerintah Kelurahan Palabuhanratu beserta jajaran perangkatnya.</p>', 'Bagan Struktur Organisasi Kelurahan Palabuhanratu')
+    `).run(),
+    env.DB.prepare(`
+      INSERT OR IGNORE INTO page_section (slug, title, content_html) 
+      VALUES ('profil-demografi', 'Profil: Demografi Penduduk', '<p>Data kependudukan Kelurahan Palabuhanratu per dusun, golongan umur, tingkat pendidikan, dan mata pencaharian, berdasarkan rekapitulasi Pemerintah Kelurahan Palabuhanratu.</p>')
+    `).run()
+  ]);
+}
+
 // 'potensi' section: halaman /potensi kini berupa kartu-kartu terancang, tidak
 // membaca section ini — disembunyikan agar admin tidak mengedit konten yang tak tampil.
 const sections = (env ? await getAllSections(env.DB) : []).filter(s => s.slug !== 'potensi');
@@ -14,10 +28,12 @@ const sectionLabels: Record<string, string> = {
   'profil-umum':                 'Profil: Umum',
   'profil-geografis':            'Profil: Geografis',
   'profil-sejarah':              'Profil: Sejarah',
+  'profil-demografi':            'Profil: Demografi Penduduk',
   'potensi':                     'Potensi Desa',
   'pemerintahan-visi-misi':      'Pemerintahan: Visi & Misi',
   'pemerintahan-ruang-lingkup':  'Pemerintahan: Ruang Lingkup',
   'pemerintahan-tugas-fungsi':   'Pemerintahan: Tugas & Fungsi',
+  'pemerintahan-struktur':       'Pemerintahan: Struktur Organisasi',
 };
 ---
 

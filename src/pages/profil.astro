@@ -8,10 +8,11 @@ const env = getEnv();
 import { getAllTitikPeta } from "../lib/db/titik-peta";
 import { getPublishedWisata } from "../lib/db/wisata";
 import { getPublishedUmkm } from "../lib/db/umkm";
-const [umum, geografis, sejarah, s, titikList, wisataList, umkmList] = await Promise.all([
+const [umum, geografis, sejarah, demografiSection, s, titikList, wisataList, umkmList] = await Promise.all([
     env ? getSection("profil-umum", env.DB) : null,
     env ? getSection("profil-geografis", env.DB) : null,
     env ? getSection("profil-sejarah", env.DB) : null,
+    env ? getSection("profil-demografi", env.DB) : null,
     env ? getPengaturan(env.DB) : {},
     env ? getAllTitikPeta(env.DB) : [],
     env ? getPublishedWisata(env.DB) : [],
@@ -263,16 +264,23 @@ const pencaharianMax = Math.max(1, ...pencaharianData.map((d) => d.value));
             </div>
         </section>
 
-        <!-- Demografi (sumber: Profil Kelurahan Palabuhanratu / RPJMDes 2026 dan rekap penduduk April 2021) -->
+        <!-- Demografi -->
         <section id="demografi" style="scroll-margin-top: 120px;">
             <h2 class="text-2xl font-heading font-extrabold text-primary">
-                Demografi Penduduk
+                {demografiSection?.title ?? 'Demografi Penduduk'}
             </h2>
-            <p class="text-muted mt-2 max-w-3xl leading-relaxed">
-                Data kependudukan Kelurahan Palabuhanratu per dusun, golongan
-                umur, tingkat pendidikan, dan mata pencaharian, berdasarkan
-                rekapitulasi Pemerintah Kelurahan Palabuhanratu tahun 2021.
-            </p>
+            {demografiSection?.content_html ? (
+                <div 
+                    class="prose max-w-none mt-2 text-muted leading-relaxed"
+                    set:html={demografiSection.content_html}
+                />
+            ) : (
+                <p class="text-muted mt-2 max-w-3xl leading-relaxed">
+                    Data kependudukan Kelurahan Palabuhanratu per dusun, golongan
+                    umur, tingkat pendidikan, dan mata pencaharian, berdasarkan
+                    rekapitulasi Pemerintah Kelurahan Palabuhanratu.
+                </p>
+            )}
 
             <div class="mt-6 space-y-10">
                 <!-- Penduduk per dusun -->
