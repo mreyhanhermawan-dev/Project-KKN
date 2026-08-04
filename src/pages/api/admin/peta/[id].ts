@@ -1,10 +1,11 @@
 import { getEnv } from '@lib/env';
 import type { APIRoute } from 'astro';
-import { createTitikPeta } from '../../../../lib/db/titik-peta';
+import { updateTitikPeta, getTitikPetaById } from '../../../../lib/db/titik-peta';
 import { purgeCache } from '../../../../lib/cache/purge';
 
-export const POST: APIRoute = async ({ request, locals, redirect }) => {
+export const POST: APIRoute = async ({ request, params, redirect }) => {
   const env = getEnv();
+  const id = Number(params.id);
   const fd = await request.formData();
   const lat = parseFloat(fd.get('lat') as string);
   const lng = parseFloat(fd.get('lng') as string);
@@ -14,11 +15,15 @@ export const POST: APIRoute = async ({ request, locals, redirect }) => {
   const desc = (fd.get('desc') as string)?.trim() || null;
 
   if (!env || isNaN(lat) || isNaN(lng) || !jenis || !linked_slug) {
-    return redirect('/admin/peta?error=1');
+    return redirect(`/admin/peta/${id}?error=1`);
   }
 
-  await createTitikPeta({ lat, lng, jenis, linked_slug, label, desc }, env.DB);
-  await purgeCache(['/peta', '/']);
-  return redirect('/admin/peta?saved=1');
-};
+  const existing = await getTitikPetaById(id, env.DB);
+  if (!existing) {
+    return redirect('/admin/peta');
+  }
 
+  await updateTitikPeta(id, { lat, lng, jenis, linked_slug, label, desc }, env.DB);
+  await purgeCache(['/peta', '/profil', '/kontak', '/']);
+  return redirect(`/admin/peta/${id}?saved=1`);
+};

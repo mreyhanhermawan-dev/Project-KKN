@@ -1,333 +1,673 @@
 ---
-import Layout from '../components/Layout.astro';
-import { getSection } from '../lib/db/page-section';
-import { getPengaturan } from '../lib/db/pengaturan';
-import { getEnv } from '@lib/env';
+import Layout from "../components/Layout.astro";
+import { getSection } from "../lib/db/page-section";
+import { getPengaturan } from "../lib/db/pengaturan";
+import { getEnv } from "@lib/env";
 
 const env = getEnv();
-const [umum, geografis, sejarah, s] = await Promise.all([
-  env ? getSection('profil-umum', env.DB) : null,
-  env ? getSection('profil-geografis', env.DB) : null,
-  env ? getSection('profil-sejarah', env.DB) : null,
-  env ? getPengaturan(env.DB) : {},
+import { getAllTitikPeta } from "../lib/db/titik-peta";
+import { getPublishedWisata } from "../lib/db/wisata";
+import { getPublishedUmkm } from "../lib/db/umkm";
+const [umum, geografis, sejarah, s, titikList, wisataList, umkmList] = await Promise.all([
+    env ? getSection("profil-umum", env.DB) : null,
+    env ? getSection("profil-geografis", env.DB) : null,
+    env ? getSection("profil-sejarah", env.DB) : null,
+    env ? getPengaturan(env.DB) : {},
+    env ? getAllTitikPeta(env.DB) : [],
+    env ? getPublishedWisata(env.DB) : [],
+    env ? getPublishedUmkm(env.DB) : [],
 ]);
 
-const fmt = (n: number) => n.toLocaleString('id-ID');
-const barPct = (v: number, max: number) => Math.max(4, Math.round((v / max) * 100));
+// Build sets of valid slugs
+const validWisataSlugs = new Set(wisataList.map(w => w.slug));
+const validUmkmSlugs = new Set(umkmList.map(u => u.slug));
 
-const stUmum = JSON.parse(s.stat_umum ?? '{}');
-const dusunData: { label: string; l: number; p: number; kk: number }[] = JSON.parse(s.stat_dusun ?? '[]');
-const dusunMax = Math.max(1, ...dusunData.flatMap(d => [d.l, d.p]));
+const demoPoints = [
+  { jenis: 'pemerintahan', label: 'Kantor Kelurahan Palabuhanratu', lat: -6.9873, lng: 106.5575, linked_slug: 'profil', desc: 'Pusat pemerintahan Kelurahan Palabuhanratu, Kp. Cipatuguran.' },
+];
+const finalPoints = titikList.length > 0 ? titikList : demoPoints;
+
+function resolveHref(p: { jenis: string; linked_slug: string }): string {
+  switch (p.jenis) {
+    case 'wisata':
+      return validWisataSlugs.has(p.linked_slug) ? `/wisata/${p.linked_slug}` : '/wisata';
+    case 'umkm':
+      return validUmkmSlugs.has(p.linked_slug) ? `/umkm/${p.linked_slug}` : '/umkm';
+    case 'pemerintahan':
+      return '/profil';
+    case 'potensi':
+    default:
+      return '/peta';
+  }
+}
+
+const finalWithHref = finalPoints.map(p => ({ ...p, href: resolveHref(p) }));
+const finalJson = JSON.stringify(finalWithHref);
+
+const titikPemerintahan = finalPoints.find(t => t.jenis === 'pemerintahan') || demoPoints[0];
+
+const fmt = (n: number) => n.toLocaleString("id-ID");
+const barPct = (v: number, max: number) =>
+    Math.max(4, Math.round((v / max) * 100));
+
+const stUmum = JSON.parse(s.stat_umum ?? "{}");
+const dusunData: { label: string; l: number; p: number; kk: number }[] =
+    JSON.parse(s.stat_dusun ?? "[]");
+const dusunMax = Math.max(1, ...dusunData.flatMap((d) => [d.l, d.p]));
 
 const totalPenduduk = dusunData.reduce((sum, d) => sum + d.l + d.p, 0);
 
-const umurData: { label: string; value: number }[] = JSON.parse(s.stat_umur ?? '[]');
-const umurMax = Math.max(1, ...umurData.map(d => d.value));
+const umurData: { label: string; value: number }[] = JSON.parse(
+    s.stat_umur ?? "[]",
+);
+const umurMax = Math.max(1, ...umurData.map((d) => d.value));
 
-const pendidikanData: { label: string; value: number }[] = JSON.parse(s.stat_pendidikan ?? '[]');
-const pendidikanMax = Math.max(1, ...pendidikanData.map(d => d.value));
+const pendidikanData: { label: string; value: number }[] = JSON.parse(
+    s.stat_pendidikan ?? "[]",
+);
+const pendidikanMax = Math.max(1, ...pendidikanData.map((d) => d.value));
 
-const pencaharianData: { label: string; value: number }[] = JSON.parse(s.stat_pencaharian ?? '[]');
-const pencaharianMax = Math.max(1, ...pencaharianData.map(d => d.value));
+const pencaharianData: { label: string; value: number }[] = JSON.parse(
+    s.stat_pencaharian ?? "[]",
+);
+const pencaharianMax = Math.max(1, ...pencaharianData.map((d) => d.value));
 ---
 
 <Layout
-  title="Profil Kelurahan | Kelurahan Palabuhanratu"
-  description="Profil lengkap Kelurahan Palabuhanratu: sejarah, kondisi geografis, visi misi, dan gambaran kelurahan pesisir Kecamatan Simpenan Sukabumi."
+    title="Profil Kelurahan | Kelurahan Palabuhanratu"
+    description="Profil lengkap Kelurahan Palabuhanratu: sejarah, kondisi geografis, visi misi, dan gambaran kelurahan pesisir Kecamatan Simpenan Sukabumi."
 >
-
-<!-- Hero -->
-<section class="relative">
-  <div class="h-48 sm:h-.4 overflow-hidden">
-    <img
-      src="/images/pantai_loji.png"
-      alt="Pantai dan alam Kelurahan Palabuhanratu"
-      class="w-full h-full object-cover"
-    />
-  </div>
-  <div class="absolute inset-0" style="background: rgba(10,54,80,0.6);"></div>
-  <div class="absolute inset-0 flex items-end">
-    <div class="mx-auto max-w-[1152px] px-4 sm:px-6 w-full pb-6 text-white">
-      <nav aria-label="Breadcrumb" class="text-sm text-white/80 flex items-center gap-1.5">
-        <a href="/" class="hover:text-white">Beranda</a>
-        <i data-lucide="chevron-right" class="w-4 h-4"></i>
-        <span class="font-medium">Profil Kelurahan</span>
-      </nav>
-      <h1 class="text-3xl sm:text-4xl font-heading font-extrabold mt-1">Profil Kelurahan Palabuhanratu</h1>
-      <p class="text-white/85 mt-1 max-w-xl">Kecamatan Palabuhanratu, Kabupaten Sukabumi, Jawa Barat</p>
-    </div>
-  </div>
-</section>
-
-<!-- Sticky subnav -->
-<div class="subnav sticky top-16 z-30 bg-white border-b border-line" style="scroll-behavior:smooth;">
-  <div class="mx-auto max-w-[1152px] px-4 sm:px-6 py-2 flex gap-2 overflow-x-auto">
-    {[
-      ['#umum', 'Umum'],
-      ['#geografis', 'Geografis'],
-      ['#demografi', 'Demografi'],
-      ['#sejarah', 'Sejarah'],
-      ['#peta', 'Peta'],
-      ['/pemerintahan', 'Pemerintahan ↗'],
-    ].map(([href, label]) => (
-      <a
-        href={href}
-        class="whitespace-nowrap px-3 py-1.5 rounded-full text-sm font-heading font-semibold border-2 border-line text-ink hover:border-accent transition-colors"
-      >
-        {label}
-      </a>
-    ))}
-  </div>
-</div>
-
-<main id="main" class="mx-auto max-w-[1152px] px-4 sm:px-6 py-10 space-y-14">
-
-  <!-- Stats -->
-  <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-    {[
-      { icon: 'users', label: 'Penduduk', value: fmt(totalPenduduk), sub: 'Jiwa' },
-      { icon: 'layers', label: 'Wilayah', value: stUmum.luas ?? '-', sub: 'Hektar' },
-      { icon: 'home', label: 'Dusun', value: String(dusunData.length), sub: 'Wilayah' },
-      { icon: 'map-pin', label: 'RW / RT', value: `${stUmum.rw ?? '-'} / ${stUmum.rt ?? '-'}`, sub: 'Administratif' },
-    ].map(tile => (
-      <div class="bg-white border border-line rounded-2xl p-5 shadow-[0_4px_10px_rgba(15,36,51,.08)]">
-        <i data-lucide={tile.icon} class="w-6 h-6 text-accent"></i>
-        <p class="font-heading font-extrabold text-2xl text-primary mt-2">{tile.value}</p>
-        <p class="text-xs font-heading font-semibold text-muted uppercase mt-0.5">{tile.sub}</p>
-        <p class="text-sm text-ink mt-0.5">{tile.label}</p>
-      </div>
-    ))}
-  </div>
-
-  <!-- Umum -->
-  <section id="umum" style="scroll-margin-top: 120px;">
-    <h2 class="text-2xl font-heading font-extrabold text-primary">Profil Umum</h2>
-    <p class="text-muted mt-2 max-w-3xl leading-relaxed">
-      Kelurahan Palabuhanratu adalah kelurahan pesisir yang terletak di Kecamatan Simpenan, Kabupaten Sukabumi, Provinsi Jawa Barat. Berbatasan langsung dengan Samudra Hindia di sebelah selatan, kelurahan ini dikenal sebagai lumbung padi wilayah Palabuhanratu sekaligus bagian dari penyangga kawasan Geopark Ciletuh-Palabuhanratu.
-    </p>
-    <div class="prose max-w-none mt-4 text-muted leading-relaxed" set:html={umum?.content_html ?? ''} />
-    <div class="grid sm:grid-cols-2 gap-4 mt-6">
-      {[
-        { label: 'Kecamatan', value: 'Palabuhanratu' },
-        { label: 'Kabupaten', value: 'Sukabumi' },
-        { label: 'Provinsi', value: 'Jawa Barat' },
-        { label: 'Kode Pos', value: '43361' },
-      ].map(row => (
-        <div class="flex justify-between py-3 border-b border-line">
-          <span class="font-heading font-semibold text-ink">{row.label}</span>
-          <span class="text-muted">{row.value}</span>
+    <!-- Hero -->
+    <section class="relative">
+        <div class="h-48 sm:h-.4 overflow-hidden">
+            <img
+                src="/images/pantai_loji.png"
+                alt="Pantai dan alam Kelurahan Palabuhanratu"
+                class="w-full h-full object-cover"
+            />
         </div>
-      ))}
-    </div>
-  </section>
-
-  <!-- Geografis -->
-  <section id="geografis" style="scroll-margin-top: 120px;">
-    <h2 class="text-2xl font-heading font-extrabold text-primary">Kondisi Geografis</h2>
-    <p class="text-muted mt-2 max-w-3xl leading-relaxed">
-      Secara geografis, Kelurahan Palabuhanratu berada di koordinat sekitar -7.059° LS, 106.578° BT. Wilayahnya meliputi kawasan pantai, bukit, dan hutan pesisir. Topografi bervariasi dari dataran rendah di pinggir pantai hingga perbukitan yang menjorok ke dalam.
-    </p>
-    <div class="prose max-w-none mt-4 text-muted leading-relaxed" set:html={geografis?.content_html ?? ''} />
-    <div class="grid sm:grid-cols-3 gap-4 mt-6">
-      {[
-        { icon: 'mountain', label: 'Ketinggian', value: '0 sampai 250 m dpl' },
-        { icon: 'thermometer', label: 'Iklim', value: 'Tropis Basah' },
-        { icon: 'waves', label: 'Garis Pantai', value: '±4 km' },
-      ].map(item => (
-        <div class="bg-white border border-line rounded-xl p-5 shadow-[0_4px_10px_rgba(15,36,51,.08)]">
-          <i data-lucide={item.icon} class="w-6 h-6 text-accent"></i>
-          <p class="text-xs font-heading font-semibold text-muted uppercase mt-2">{item.label}</p>
-          <p class="font-heading font-bold text-xl text-primary mt-0.5">{item.value}</p>
+        <div class="absolute inset-0" style="background: rgba(10,54,80,0.6);">
         </div>
-      ))}
-    </div>
-  </section>
-
-  <!-- Demografi (sumber: Profil Kelurahan Palabuhanratu / RPJMDes 2026 dan rekap penduduk April 2026) -->
-  <section id="demografi" style="scroll-margin-top: 120px;">
-    <h2 class="text-2xl font-heading font-extrabold text-primary">Demografi Penduduk</h2>
-    <p class="text-muted mt-2 max-w-3xl leading-relaxed">
-      Data kependudukan Kelurahan Palabuhanratu per dusun, golongan umur, tingkat pendidikan, dan mata pencaharian, berdasarkan rekapitulasi Pemerintah Kelurahan Palabuhanratu tahun 2026.
-    </p>
-
-    <div class="mt-6 space-y-10">
-
-      <!-- Penduduk per dusun -->
-      <div>
-        <h3 class="font-heading font-bold text-lg text-primary mb-1">Penduduk per Dusun</h3>
-        <div class="flex items-center gap-4 mb-3 text-sm text-muted">
-          <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm inline-block" style="background:var(--color-accent);"></span>Laki-laki</span>
-          <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm inline-block" style="background:var(--color-cta);"></span>Perempuan</span>
+        <div class="absolute inset-0 flex items-end">
+            <div
+                class="mx-auto max-w-[1152px] px-4 sm:px-6 w-full pb-6 text-white"
+            >
+                <nav
+                    aria-label="Breadcrumb"
+                    class="text-sm text-white/80 flex items-center gap-1.5"
+                >
+                    <a href="/" class="hover:text-white">Beranda</a>
+                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                    <span class="font-medium">Profil Kelurahan</span>
+                </nav>
+                <h1
+                    class="text-3xl sm:text-4xl font-heading font-extrabold mt-1"
+                >
+                    Profil Kelurahan Palabuhanratu
+                </h1>
+                <p class="text-white/85 mt-1 max-w-xl">
+                    Kecamatan Palabuhanratu, Kabupaten Sukabumi, Jawa Barat
+                </p>
+            </div>
         </div>
-        <div class="space-y-4">
-          {dusunData.map(d => (
-            <div>
-              <div class="flex items-baseline justify-between mb-1">
-                <span class="font-heading font-semibold text-sm text-ink">Dusun {d.label}</span>
-                <span class="text-xs text-muted">{fmt(d.l + d.p)} jiwa · {fmt(d.kk)} KK</span>
-              </div>
-              <div class="flex items-center gap-2 mb-1">
-                <div class="flex-1 h-5 rounded-md" style="background:var(--color-line);">
-                  <div class="h-full" style={`width:${barPct(d.l, dusunMax)}%; background:var(--color-accent); border-radius:0 4px 4px 0;`}></div>
+    </section>
+
+    <!-- Sticky subnav -->
+    <div
+        class="subnav sticky top-16 z-30 bg-white border-b border-line"
+        style="scroll-behavior:smooth;"
+    >
+        <div
+            class="mx-auto max-w-[1152px] px-4 sm:px-6 py-2 flex gap-2 overflow-x-auto"
+        >
+            {
+                [
+                    ["#umum", "Umum"],
+                    ["#geografis", "Geografis"],
+                    ["#demografi", "Demografi"],
+                    ["#sejarah", "Sejarah"],
+                    ["#peta", "Peta"],
+                    ["/pemerintahan", "Pemerintahan ↗"],
+                ].map(([href, label]) => (
+                    <a
+                        href={href}
+                        class="whitespace-nowrap px-3 py-1.5 rounded-full text-sm font-heading font-semibold border-2 border-line text-ink hover:border-accent transition-colors"
+                    >
+                        {label}
+                    </a>
+                ))
+            }
+        </div>
+    </div>
+
+    <main
+        id="main"
+        class="mx-auto max-w-[1152px] px-4 sm:px-6 py-10 space-y-14"
+    >
+        <!-- Stats -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {
+                [
+                    {
+                        icon: "users",
+                        label: "Penduduk",
+                        value: fmt(totalPenduduk),
+                        sub: "Jiwa",
+                    },
+                    {
+                        icon: "layers",
+                        label: "Wilayah",
+                        value: stUmum.luas ?? "-",
+                        sub: "Hektar",
+                    },
+                    {
+                        icon: "home",
+                        label: "Dusun",
+                        value: String(dusunData.length),
+                        sub: "Wilayah",
+                    },
+                    {
+                        icon: "map-pin",
+                        label: "RW / RT",
+                        value: `${stUmum.rw ?? "-"} / ${stUmum.rt ?? "-"}`,
+                        sub: "Administratif",
+                    },
+                ].map((tile) => (
+                    <div class="bg-white border border-line rounded-2xl p-5 shadow-[0_4px_10px_rgba(15,36,51,.08)]">
+                        <i
+                            data-lucide={tile.icon}
+                            class="w-6 h-6 text-accent"
+                        />
+                        <p class="font-heading font-extrabold text-2xl text-primary mt-2">
+                            {tile.value}
+                        </p>
+                        <p class="text-xs font-heading font-semibold text-muted uppercase mt-0.5">
+                            {tile.sub}
+                        </p>
+                        <p class="text-sm text-ink mt-0.5">{tile.label}</p>
+                    </div>
+                ))
+            }
+        </div>
+
+        <!-- Umum -->
+        <section id="umum" style="scroll-margin-top: 120px;">
+            <h2 class="text-2xl font-heading font-extrabold text-primary">
+                Profil Umum
+            </h2>
+            <div
+                class="prose max-w-none mt-4 text-muted leading-relaxed"
+                set:html={umum?.content_html ?? ""}
+            />
+            <div class="grid sm:grid-cols-2 gap-4 mt-6">
+                {
+                    [
+                        { label: "Kecamatan", value: "Palabuhanratu" },
+                        { label: "Kabupaten", value: "Sukabumi" },
+                        { label: "Provinsi", value: "Jawa Barat" },
+                        { label: "Kode Pos", value: "43311" },
+                    ].map((row) => (
+                        <div class="flex justify-between py-3 border-b border-line">
+                            <span class="font-heading font-semibold text-ink">
+                                {row.label}
+                            </span>
+                            <span class="text-muted">{row.value}</span>
+                        </div>
+                    ))
+                }
+            </div>
+        </section>
+
+        <!-- Geografis -->
+        <section id="geografis" style="scroll-margin-top: 120px;">
+            <h2 class="text-2xl font-heading font-extrabold text-primary">
+                Kondisi Geografis
+            </h2>
+            <div
+                class="prose max-w-none mt-4 text-muted leading-relaxed"
+                set:html={geografis?.content_html ?? ""}
+            />
+            <div class="grid sm:grid-cols-3 gap-4 mt-6">
+                {
+                    [
+                        {
+                            icon: "mountain",
+                            label: "Ketinggian",
+                            value: "0 sampai 250 m dpl",
+                        },
+                        {
+                            icon: "thermometer",
+                            label: "Iklim",
+                            value: "Tropis Basah",
+                        },
+                        {
+                            icon: "waves",
+                            label: "Garis Pantai",
+                            value: "±4 km",
+                        },
+                    ].map((item) => (
+                        <div class="bg-white border border-line rounded-xl p-5 shadow-[0_4px_10px_rgba(15,36,51,.08)]">
+                            <i
+                                data-lucide={item.icon}
+                                class="w-6 h-6 text-accent"
+                            />
+                            <p class="text-xs font-heading font-semibold text-muted uppercase mt-2">
+                                {item.label}
+                            </p>
+                            <p class="font-heading font-bold text-xl text-primary mt-0.5">
+                                {item.value}
+                            </p>
+                        </div>
+                    ))
+                }
+            </div>
+        </section>
+
+        <!-- Demografi (sumber: Profil Kelurahan Palabuhanratu / RPJMDes 2026 dan rekap penduduk April 2021) -->
+        <section id="demografi" style="scroll-margin-top: 120px;">
+            <h2 class="text-2xl font-heading font-extrabold text-primary">
+                Demografi Penduduk
+            </h2>
+            <p class="text-muted mt-2 max-w-3xl leading-relaxed">
+                Data kependudukan Kelurahan Palabuhanratu per dusun, golongan
+                umur, tingkat pendidikan, dan mata pencaharian, berdasarkan
+                rekapitulasi Pemerintah Kelurahan Palabuhanratu tahun 2021.
+            </p>
+
+            <div class="mt-6 space-y-10">
+                <!-- Penduduk per dusun -->
+                <div>
+                    <h3
+                        class="font-heading font-bold text-lg text-primary mb-1"
+                    >
+                        Penduduk per Dusun
+                    </h3>
+                    <div
+                        class="flex items-center gap-4 mb-3 text-sm text-muted"
+                    >
+                        <span class="inline-flex items-center gap-1.5"
+                            ><span
+                                class="w-3 h-3 rounded-sm inline-block"
+                                style="background:var(--color-accent);"
+                            ></span>Laki-laki</span
+                        >
+                        <span class="inline-flex items-center gap-1.5"
+                            ><span
+                                class="w-3 h-3 rounded-sm inline-block"
+                                style="background:var(--color-cta);"
+                            ></span>Perempuan</span
+                        >
+                    </div>
+                    <div class="space-y-4">
+                        {
+                            dusunData.map((d) => (
+                                <div>
+                                    <div class="flex items-baseline justify-between mb-1">
+                                        <span class="font-heading font-semibold text-sm text-ink">
+                                            Dusun {d.label}
+                                        </span>
+                                        <span class="text-xs text-muted">
+                                            {fmt(d.l + d.p)} jiwa · {fmt(d.kk)}{" "}
+                                            KK
+                                        </span>
+                                    </div>
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <div
+                                            class="flex-1 h-5 rounded-md"
+                                            style="background:var(--color-line);"
+                                        >
+                                            <div
+                                                class="h-full"
+                                                style={`width:${barPct(d.l, dusunMax)}%; background:var(--color-accent); border-radius:0 4px 4px 0;`}
+                                            />
+                                        </div>
+                                        <span class="w-14 shrink-0 text-right text-xs font-heading font-semibold text-ink tabular-nums">
+                                            {fmt(d.l)}
+                                        </span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <div
+                                            class="flex-1 h-5 rounded-md"
+                                            style="background:var(--color-line);"
+                                        >
+                                            <div
+                                                class="h-full"
+                                                style={`width:${barPct(d.p, dusunMax)}%; background:var(--color-cta); border-radius:0 4px 4px 0;`}
+                                            />
+                                        </div>
+                                        <span class="w-14 shrink-0 text-right text-xs font-heading font-semibold text-ink tabular-nums">
+                                            {fmt(d.p)}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))
+                        }
+                    </div>
                 </div>
-                <span class="w-14 shrink-0 text-right text-xs font-heading font-semibold text-ink tabular-nums">{fmt(d.l)}</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <div class="flex-1 h-5 rounded-md" style="background:var(--color-line);">
-                  <div class="h-full" style={`width:${barPct(d.p, dusunMax)}%; background:var(--color-cta); border-radius:0 4px 4px 0;`}></div>
+
+                <!-- Golongan umur -->
+                <div>
+                    <h3
+                        class="font-heading font-bold text-lg text-primary mb-3"
+                    >
+                        Golongan Umur
+                    </h3>
+                    <div class="space-y-2">
+                        {
+                            umurData.map((d) => (
+                                <div class="flex items-center gap-3">
+                                    <span class="w-28 shrink-0 text-sm text-ink">
+                                        {d.label}
+                                    </span>
+                                    <div
+                                        class="flex-1 h-5 rounded-md"
+                                        style="background:var(--color-line);"
+                                    >
+                                        <div
+                                            class="h-full"
+                                            style={`width:${barPct(d.value, umurMax)}%; background:var(--color-accent); border-radius:0 4px 4px 0;`}
+                                        />
+                                    </div>
+                                    <span class="w-14 shrink-0 text-right text-sm font-heading font-semibold text-primary tabular-nums">
+                                        {fmt(d.value)}
+                                    </span>
+                                </div>
+                            ))
+                        }
+                    </div>
                 </div>
-                <span class="w-14 shrink-0 text-right text-xs font-heading font-semibold text-ink tabular-nums">{fmt(d.p)}</span>
-              </div>
+
+                <!-- Tingkat pendidikan -->
+                <div>
+                    <h3
+                        class="font-heading font-bold text-lg text-primary mb-3"
+                    >
+                        Tingkat Pendidikan
+                    </h3>
+                    <div class="space-y-2">
+                        {
+                            pendidikanData.map((d) => (
+                                <div class="flex items-center gap-3">
+                                    <span class="w-40 shrink-0 text-sm text-ink">
+                                        {d.label}
+                                    </span>
+                                    <div
+                                        class="flex-1 h-5 rounded-md"
+                                        style="background:var(--color-line);"
+                                    >
+                                        <div
+                                            class="h-full"
+                                            style={`width:${barPct(d.value, pendidikanMax)}%; background:var(--color-accent); border-radius:0 4px 4px 0;`}
+                                        />
+                                    </div>
+                                    <span class="w-14 shrink-0 text-right text-sm font-heading font-semibold text-primary tabular-nums">
+                                        {fmt(d.value)}
+                                    </span>
+                                </div>
+                            ))
+                        }
+                    </div>
+                </div>
+
+                <!-- Mata pencaharian -->
+                <div>
+                    <h3
+                        class="font-heading font-bold text-lg text-primary mb-3"
+                    >
+                        Mata Pencaharian
+                    </h3>
+                    <div class="space-y-2">
+                        {
+                            pencaharianData.map((d) => (
+                                <div class="flex items-center gap-3">
+                                    <span class="w-52 shrink-0 text-sm text-ink">
+                                        {d.label}
+                                    </span>
+                                    <div
+                                        class="flex-1 h-5 rounded-md"
+                                        style="background:var(--color-line);"
+                                    >
+                                        <div
+                                            class="h-full"
+                                            style={`width:${barPct(d.value, pencaharianMax)}%; background:var(--color-accent); border-radius:0 4px 4px 0;`}
+                                        />
+                                    </div>
+                                    <span class="w-14 shrink-0 text-right text-sm font-heading font-semibold text-primary tabular-nums">
+                                        {fmt(d.value)}
+                                    </span>
+                                </div>
+                            ))
+                        }
+                    </div>
+                </div>
+
+                <!-- Tabel data (aksesibilitas) -->
+                <details class="border border-line rounded-xl p-4">
+                    <summary
+                        class="font-heading font-semibold text-sm text-primary cursor-pointer"
+                        >Lihat semua data dalam bentuk tabel</summary
+                    >
+                    <div class="mt-4 grid sm:grid-cols-2 gap-6 text-sm">
+                        <table class="w-full">
+                            <caption
+                                class="text-left font-heading font-semibold mb-1"
+                                >Penduduk per Dusun</caption
+                            >
+                            <thead
+                                ><tr class="text-muted text-xs"
+                                    ><th class="text-left font-normal py-1"
+                                        >Dusun</th
+                                    ><th class="text-right font-normal">L</th
+                                    ><th class="text-right font-normal">P</th
+                                    ><th class="text-right font-normal">KK</th
+                                    ></tr
+                                ></thead
+                            >
+                            <tbody>
+                                {
+                                    dusunData.map((d) => (
+                                        <tr class="border-t border-line">
+                                            <>
+                                                <td class="py-1">{d.label}</td>
+                                                <td class="text-right tabular-nums">
+                                                    {fmt(d.l)}
+                                                </td>
+                                                <td class="text-right tabular-nums">
+                                                    {fmt(d.p)}
+                                                </td>
+                                                <td class="text-right tabular-nums">
+                                                    {fmt(d.kk)}
+                                                </td>
+                                            </>
+                                        </tr>
+                                    ))
+                                }
+                            </tbody>
+                        </table>
+                        <table class="w-full">
+                            <caption
+                                class="text-left font-heading font-semibold mb-1"
+                                >Golongan Umur</caption
+                            >
+                            <tbody>
+                                {
+                                    umurData.map((d) => (
+                                        <tr class="border-t border-line">
+                                            <>
+                                                <td class="py-1">{d.label}</td>
+                                                <td class="text-right tabular-nums">
+                                                    {fmt(d.value)}
+                                                </td>
+                                            </>
+                                        </tr>
+                                    ))
+                                }
+                            </tbody>
+                        </table>
+                        <table class="w-full">
+                            <caption
+                                class="text-left font-heading font-semibold mb-1"
+                                >Tingkat Pendidikan</caption
+                            >
+                            <tbody>
+                                {
+                                    pendidikanData.map((d) => (
+                                        <tr class="border-t border-line">
+                                            <>
+                                                <td class="py-1">{d.label}</td>
+                                                <td class="text-right tabular-nums">
+                                                    {fmt(d.value)}
+                                                </td>
+                                            </>
+                                        </tr>
+                                    ))
+                                }
+                            </tbody>
+                        </table>
+                        <table class="w-full">
+                            <caption
+                                class="text-left font-heading font-semibold mb-1"
+                                >Mata Pencaharian</caption
+                            >
+                            <tbody>
+                                {
+                                    pencaharianData.map((d) => (
+                                        <tr class="border-t border-line">
+                                            <>
+                                                <td class="py-1">{d.label}</td>
+                                                <td class="text-right tabular-nums">
+                                                    {fmt(d.value)}
+                                                </td>
+                                            </>
+                                        </tr>
+                                    ))
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </details>
             </div>
-          ))}
-        </div>
-      </div>
+        </section>
 
-      <!-- Golongan umur -->
-      <div>
-        <h3 class="font-heading font-bold text-lg text-primary mb-3">Golongan Umur</h3>
-        <div class="space-y-2">
-          {umurData.map(d => (
-            <div class="flex items-center gap-3">
-              <span class="w-28 shrink-0 text-sm text-ink">{d.label}</span>
-              <div class="flex-1 h-5 rounded-md" style="background:var(--color-line);">
-                <div class="h-full" style={`width:${barPct(d.value, umurMax)}%; background:var(--color-accent); border-radius:0 4px 4px 0;`}></div>
-              </div>
-              <span class="w-14 shrink-0 text-right text-sm font-heading font-semibold text-primary tabular-nums">{fmt(d.value)}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <!-- Tingkat pendidikan -->
-      <div>
-        <h3 class="font-heading font-bold text-lg text-primary mb-3">Tingkat Pendidikan</h3>
-        <div class="space-y-2">
-          {pendidikanData.map(d => (
-            <div class="flex items-center gap-3">
-              <span class="w-40 shrink-0 text-sm text-ink">{d.label}</span>
-              <div class="flex-1 h-5 rounded-md" style="background:var(--color-line);">
-                <div class="h-full" style={`width:${barPct(d.value, pendidikanMax)}%; background:var(--color-accent); border-radius:0 4px 4px 0;`}></div>
-              </div>
-              <span class="w-14 shrink-0 text-right text-sm font-heading font-semibold text-primary tabular-nums">{fmt(d.value)}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <!-- Mata pencaharian -->
-      <div>
-        <h3 class="font-heading font-bold text-lg text-primary mb-3">Mata Pencaharian</h3>
-        <div class="space-y-2">
-          {pencaharianData.map(d => (
-            <div class="flex items-center gap-3">
-              <span class="w-52 shrink-0 text-sm text-ink">{d.label}</span>
-              <div class="flex-1 h-5 rounded-md" style="background:var(--color-line);">
-                <div class="h-full" style={`width:${barPct(d.value, pencaharianMax)}%; background:var(--color-accent); border-radius:0 4px 4px 0;`}></div>
-              </div>
-              <span class="w-14 shrink-0 text-right text-sm font-heading font-semibold text-primary tabular-nums">{fmt(d.value)}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <!-- Tabel data (aksesibilitas) -->
-      <details class="border border-line rounded-xl p-4">
-        <summary class="font-heading font-semibold text-sm text-primary cursor-pointer">Lihat semua data dalam bentuk tabel</summary>
-        <div class="mt-4 grid sm:grid-cols-2 gap-6 text-sm">
-          <table class="w-full">
-            <caption class="text-left font-heading font-semibold mb-1">Penduduk per Dusun</caption>
-            <thead><tr class="text-muted text-xs"><th class="text-left font-normal py-1">Dusun</th><th class="text-right font-normal">L</th><th class="text-right font-normal">P</th><th class="text-right font-normal">KK</th></tr></thead>
-            <tbody>
-              {dusunData.map(d => (
-                <tr class="border-t border-line"><td class="py-1">{d.label}</td><td class="text-right tabular-nums">{fmt(d.l)}</td><td class="text-right tabular-nums">{fmt(d.p)}</td><td class="text-right tabular-nums">{fmt(d.kk)}</td></tr>
-              ))}
-            </tbody>
-          </table>
-          <table class="w-full">
-            <caption class="text-left font-heading font-semibold mb-1">Golongan Umur</caption>
-            <tbody>
-              {umurData.map(d => (
-                <tr class="border-t border-line"><td class="py-1">{d.label}</td><td class="text-right tabular-nums">{fmt(d.value)}</td></tr>
-              ))}
-            </tbody>
-          </table>
-          <table class="w-full">
-            <caption class="text-left font-heading font-semibold mb-1">Tingkat Pendidikan</caption>
-            <tbody>
-              {pendidikanData.map(d => (
-                <tr class="border-t border-line"><td class="py-1">{d.label}</td><td class="text-right tabular-nums">{fmt(d.value)}</td></tr>
-              ))}
-            </tbody>
-          </table>
-          <table class="w-full">
-            <caption class="text-left font-heading font-semibold mb-1">Mata Pencaharian</caption>
-            <tbody>
-              {pencaharianData.map(d => (
-                <tr class="border-t border-line"><td class="py-1">{d.label}</td><td class="text-right tabular-nums">{fmt(d.value)}</td></tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </details>
-
-    </div>
-  </section>
-
-  <!-- Sejarah -->
-  <section id="sejarah" style="scroll-margin-top: 120px;">
-    <h2 class="text-2xl font-heading font-extrabold text-primary">Sejarah Kelurahan</h2>
-    <div class="prose max-w-none mt-4 text-muted leading-relaxed" set:html={sejarah?.content_html ?? `
+        <!-- Sejarah -->
+        <section id="sejarah" style="scroll-margin-top: 120px;">
+            <h2 class="text-2xl font-heading font-extrabold text-primary">
+                Sejarah Kelurahan
+            </h2>
+            <div
+                class="prose max-w-none mt-4 text-muted leading-relaxed"
+                set:html={sejarah?.content_html ??
+                    `
       <p>Kelurahan Palabuhanratu memiliki sejarah panjang sebagai perkampungan nelayan di tepi Samudra Hindia. Nama "Palabuhanratu" diyakini berasal dari bangunan peninggalan masa kolonial yang pernah berdiri di kawasan ini. Masyarakat kelurahan secara turun-temurun hidup dari hasil laut dan pertanian pesisir.</p>
       <p>Posisi strategis Kelurahan Palabuhanratu sebagai gerbang Geopark Ciletuh mulai membuka babak baru bagi perekonomian kelurahan, dengan pariwisata menjadi sektor yang terus berkembang di samping perikanan tradisional yang menjadi tulang punggung.</p>
-    `} />
-  </section>
+    `}
+            />
+        </section>
 
-  <!-- Peta -->
-  <section id="peta" style="scroll-margin-top: 120px;">
-    <h2 class="text-2xl font-heading font-extrabold text-primary">Peta Kelurahan</h2>
-    <p class="text-muted mt-2">Lokasi Kelurahan Palabuhanratu di Kecamatan Palabuhanratu, Kabupaten Sukabumi.</p>
-    <div id="profil-map" class="mt-4 rounded-2xl overflow-hidden border border-line shadow-[0_4px_10px_rgba(15,36,51,.08)]" style="height: 380px;"></div>
-    <p class="text-sm text-muted mt-2 flex items-center gap-1.5">
-      <i data-lucide="info" class="w-4 h-4"></i>
-      Koordinat: -6.9873, 106.5575 ·
-      <a href="/peta" class="text-accent hover:underline font-medium">Buka peta interaktif lengkap →</a>
-    </p>
-  </section>
+        <!-- Peta -->
+        <section id="peta" style="scroll-margin-top: 120px;">
+            <h2 class="text-2xl font-heading font-extrabold text-primary">
+                Peta Kelurahan
+            </h2>
+            <p class="text-muted mt-2">
+                Lokasi Kelurahan Palabuhanratu di Kecamatan Palabuhanratu,
+                Kabupaten Sukabumi.
+            </p>
+            <div
+                id="profil-map"
+                class="mt-4 rounded-2xl overflow-hidden border border-line shadow-[0_4px_10px_rgba(15,36,51,.08)] w-full relative z-0"
+                style="height: 380px;"
+            >
+            </div>
+            <p class="text-sm text-muted mt-2 flex items-center gap-1.5">
+                <i data-lucide="info" class="w-4 h-4"></i>
+                Koordinat: {titikPemerintahan.lat}, {titikPemerintahan.lng} ·
+                <a href="/peta" class="text-accent hover:underline font-medium"
+                    >Buka peta interaktif lengkap →</a
+                >
+            </p>
+        </section>
 
-  <!-- CTA Pemerintahan -->
-  <section style="scroll-margin-top: 120px;">
-    <div class="bg-primary text-white rounded-2xl p-8 flex flex-col sm:flex-row items-center gap-6">
-      <div class="flex-1">
-        <h2 class="text-2xl font-heading font-extrabold">Pemerintahan Kelurahan</h2>
-        <p class="text-white/80 mt-2">Pelajari struktur organisasi, perangkat kelurahan, visi misi, dan tugas fungsi pemerintahan Kelurahan Palabuhanratu.</p>
-      </div>
-      <a href="/pemerintahan" class="inline-flex items-center gap-2 bg-white text-primary font-heading font-semibold px-6 py-3 rounded-lg hover:bg-sand transition-colors min-h-[44px] shrink-0">
-        <i data-lucide="landmark" class="w-5 h-5"></i> Lihat Pemerintahan
-      </a>
-    </div>
-  </section>
-
-</main>
-
+        <!-- CTA Pemerintahan -->
+        <section style="scroll-margin-top: 120px;">
+            <div
+                class="bg-primary text-white rounded-2xl p-8 flex flex-col sm:flex-row items-center gap-6"
+            >
+                <div class="flex-1">
+                    <h2 class="text-2xl font-heading font-extrabold">
+                        Pemerintahan Kelurahan
+                    </h2>
+                    <p class="text-white/80 mt-2">
+                        Pelajari struktur organisasi, perangkat kelurahan, visi
+                        misi, dan tugas fungsi pemerintahan Kelurahan
+                        Palabuhanratu.
+                    </p>
+                </div>
+                <a
+                    href="/pemerintahan"
+                    class="inline-flex items-center gap-2 bg-white text-primary font-heading font-semibold px-6 py-3 rounded-lg hover:bg-sand transition-colors min-h-[44px] shrink-0"
+                >
+                    <i data-lucide="landmark" class="w-5 h-5"></i> Lihat Pemerintahan
+                </a>
+            </div>
+        </section>
+    </main>
 </Layout>
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-<script is:inline>
-  document.addEventListener('DOMContentLoaded', function() {
-    var map = L.map('profil-map', { scrollWheelZoom: false }).setView([-6.9873, 106.5575], 14);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
-    L.marker([-6.9873, 106.5575]).addTo(map).bindPopup('<b>Kelurahan Palabuhanratu</b><br>Kec. Palabuhanratu, Sukabumi');
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-  });
-  setTimeout(function() {
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-  }, 300);
+<link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    crossorigin=""
+/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""
+></script>
+<script is:inline define:vars={{ finalJson, ptLat: titikPemerintahan.lat, ptLng: titikPemerintahan.lng }}>
+    document.addEventListener("DOMContentLoaded", function () {
+        var map = L.map("profil-map", { scrollWheelZoom: false }).setView(
+            [ptLat, ptLng],
+            13,
+        );
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: "© OpenStreetMap",
+        }).addTo(map);
+
+        const COLORS = { wisata: '#0E9AA7', umkm: '#15803D', potensi: '#0E4A6E', pemerintahan: '#E11D48' };
+
+        const points = JSON.parse(finalJson);
+        points.forEach(p => {
+            const color = COLORS[p.jenis] ?? '#666';
+            const icon = L.divIcon({
+                className: '',
+                html: `<div style="width:24px;height:24px;background:${color};border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,.3);"></div>`,
+                iconSize: [24, 24],
+                iconAnchor: [12, 24],
+                popupAnchor: [0, -26]
+            });
+            L.marker([p.lat, p.lng], { icon, title: p.label })
+                .bindPopup(`<h3 style="font-family:Lexend,sans-serif;font-weight:700;color:#0E4A6E;margin:0 0 4px">${p.label}</h3><p style="margin:0 0 6px;color:#475569;font-size:.85rem">${p.desc ?? ''}</p><a href="${p.href}" style="color:#0E9AA7;font-weight:600;font-size:.85rem">Lihat detail →</a>`)
+                .addTo(map);
+        });
+
+        if (typeof lucide !== "undefined") lucide.createIcons();
+    });
+    setTimeout(function () {
+        if (typeof lucide !== "undefined") lucide.createIcons();
+    }, 300);
 </script>
 
 <style>
-  .prose p { margin: .5rem 0; line-height: 1.75; }
-  .prose h3 { font-family: 'Lexend', sans-serif; font-weight: 700; color: #0E4A6E; margin: 1rem 0 .5rem; }
-  [id] { scroll-margin-top: 120px; }
+    .prose p {
+        margin: 0.5rem 0;
+        line-height: 1.75;
+    }
+    .prose h3 {
+        font-family: "Lexend", sans-serif;
+        font-weight: 700;
+        color: #0e4a6e;
+        margin: 1rem 0 0.5rem;
+    }
+    [id] {
+        scroll-margin-top: 120px;
+    }
 </style>

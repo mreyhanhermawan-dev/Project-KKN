@@ -9,6 +9,7 @@ const MAX_BYTES = 5 * 1024 * 1024;
 export const POST: APIRoute = async ({ request }) => {
   const env = getEnv();
   if (!env) return new Response('Server tidak siap', { status: 503 });
+  if (!env.DB || !env.MEDIA_BUCKET) return new Response('Binding database atau media belum tersedia', { status: 503 });
 
   const fd = await request.formData();
   const display = fd.get('display');
@@ -24,9 +25,17 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response('Ukuran gambar terlalu besar', { status: 400 });
   }
 
-  const { id, displayKey, thumbKey } = await saveMedia(display, thumb, alt, env.DB, env.MEDIA_BUCKET);
+  let uploadResult;
+  try {
+    uploadResult = await saveMedia(display, thumb, alt, env.DB, env.MEDIA_BUCKET);
+  } catch (error) {
+    console.error('Upload media gagal:', error);
+    return new Response('Upload gagal. Periksa konfigurasi storage dan coba lagi.', { status: 500 });
+  }
 
-  const validOwnerTypes = ['berita', 'wisata', 'umkm'];
+  const { id, displayKey, thumbKey } = uploadResult;
+
+  const validOwnerTypes = ['berita', 'wisata', 'umkm', 'produk'];
   if (ownerType && ownerIdRaw) {
     const ownerId = Number(ownerIdRaw);
     if (!validOwnerTypes.includes(ownerType) || !Number.isFinite(ownerId)) {

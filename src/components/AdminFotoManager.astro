@@ -2,20 +2,28 @@
 import type { Media } from '../lib/db/media';
 
 interface Props {
-  ownerType: 'berita' | 'wisata' | 'umkm';
+  ownerType: 'berita' | 'wisata' | 'umkm' | 'produk';
   ownerId: number;
   mediaList: Media[];
   purgePaths: string[];
   defaultAlt: string;
+  title?: string;
+  subtitle?: string;
+  buttonLabel?: string;
 }
-const { ownerType, ownerId, mediaList, purgePaths, defaultAlt } = Astro.props;
+const { ownerType, ownerId, mediaList, purgePaths, defaultAlt, title, subtitle, buttonLabel } = Astro.props;
+const displayTitle = title ?? 'Foto Sampul & Galeri';
+const displaySubtitle = subtitle ?? 'Foto pertama otomatis menjadi sampul. Gunakan "Jadikan Sampul" untuk mengganti.';
+const displayButton = buttonLabel ?? '+ Tambah Foto';
 const back = Astro.url.pathname;
 const purge = purgePaths.join(',');
+const inputId = `foto-input-${ownerType}-${ownerId}`;
+const statusId = `foto-status-${ownerType}-${ownerId}`;
 ---
 
-<div class="mt-8 bg-white rounded-xl border border-border p-6" style="box-shadow:var(--shadow-sm);">
-  <h3 class="font-heading font-semibold text-lg mb-1" style="color:var(--color-primary);">Foto Sampul & Galeri</h3>
-  <p class="text-xs text-text-muted mb-4">Foto pertama otomatis menjadi sampul. Gunakan "Jadikan Sampul" untuk mengganti.</p>
+<div class="mt-8 bg-white rounded-xl border border-border p-6" style="box-shadow:var(--shadow-sm);" data-upload-manager>
+  <h3 class="font-heading font-semibold text-lg mb-1" style="color:var(--color-primary);">{displayTitle}</h3>
+  <p class="text-xs text-text-muted mb-4">{displaySubtitle}</p>
 
   {mediaList.length > 0 && (
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-4">
@@ -57,31 +65,18 @@ const purge = purgePaths.join(',');
   )}
 
   <label class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg font-heading font-medium text-sm border cursor-pointer hover:bg-sand" style="border-color:var(--color-border); min-height:44px;">
-    + Tambah Foto
-    <input type="file" accept="image/*" multiple class="hidden" id="foto-input"
-      data-owner-type={ownerType} data-owner-id={ownerId} data-purge={purge} data-default-alt={defaultAlt} />
+    {displayButton}
+    <input type="file" accept="image/*" multiple class="hidden" id={inputId} data-upload-manager data-owner-type={ownerType} data-owner-id={ownerId} data-purge={purge} data-default-alt={defaultAlt} />
   </label>
-  <p id="foto-status" class="text-xs text-text-muted mt-2"></p>
-</div>
+  <p id={statusId} data-upload-status class="text-xs text-text-muted mt-2"></p>
 
-<script>
-  import { uploadImage } from '../scripts/admin-editor';
+  <script>
+    import { attachFotoUploadHandlers } from '../scripts/admin-editor';
 
-  const input = document.getElementById('foto-input') as HTMLInputElement;
-  const status = document.getElementById('foto-status') as HTMLParagraphElement;
-
-  input?.addEventListener('change', async () => {
-    const files = [...(input.files ?? [])];
-    if (!files.length) return;
-    const { ownerType, ownerId, purge, defaultAlt } = input.dataset;
-    status.textContent = `Mengunggah ${files.length} foto...`;
-    try {
-      for (const file of files) {
-        await uploadImage(file, defaultAlt ?? '', { owner_type: ownerType ?? '', owner_id: ownerId ?? '', purge: purge ?? '' });
-      }
-      location.reload();
-    } catch {
-      status.textContent = 'Upload gagal. Periksa koneksi lalu coba lagi.';
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', attachFotoUploadHandlers, { once: true });
+    } else {
+      attachFotoUploadHandlers();
     }
-  });
-</script>
+  </script>
+</div>

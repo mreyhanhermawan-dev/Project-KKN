@@ -69,17 +69,26 @@ const coverImage = mediaList[0];
     )}
 
     <!-- Map link -->
-    <div class="bg-white rounded-xl p-4 border border-border flex items-center gap-4" style="box-shadow:var(--shadow-sm);">
-      <div class="w-10 h-10 rounded-full grid place-items-center shrink-0" style="background:var(--color-accent);">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+    <div class="bg-white rounded-xl p-4 border border-border flex flex-col sm:flex-row sm:items-center gap-4" style="box-shadow:var(--shadow-sm);">
+      <div class="flex items-center gap-4 flex-1">
+        <div class="w-10 h-10 rounded-full grid place-items-center shrink-0" style="background:var(--color-accent);">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+        </div>
+        <div>
+          <p class="font-heading font-medium text-sm">Lihat Lokasi</p>
+          <p class="text-text-muted text-xs">Temukan lokasi wisata ini di peta interaktif atau Google Maps.</p>
+        </div>
       </div>
-      <div>
-        <p class="font-heading font-medium text-sm">Lihat di Peta</p>
-        <p class="text-text-muted text-xs">Temukan lokasi pada peta interaktif Kelurahan Palabuhanratu</p>
+      <div class="flex gap-2 sm:ml-auto">
+        <a href="/peta" class="flex-1 sm:flex-none text-center px-4 py-2 rounded-md font-heading font-medium text-sm border transition-colors hover:bg-accent hover:text-white" style="border-color:var(--color-accent); color:var(--color-accent);">
+          Peta Desa
+        </a>
+        {wisata.google_maps_url && (
+          <a href={wisata.google_maps_url} target="_blank" rel="noopener noreferrer" class="flex-1 sm:flex-none text-center px-4 py-2 rounded-md font-heading font-medium text-sm text-white transition-colors hover:opacity-90" style="background:var(--color-accent);">
+            Google Maps ↗
+          </a>
+        )}
       </div>
-      <a href="/peta" class="ml-auto px-3 py-1.5 rounded-md font-heading font-medium text-sm border transition-colors hover:bg-accent hover:text-white focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-accent" style="border-color:var(--color-accent); color:var(--color-accent);">
-        Lihat di Peta →
-      </a>
     </div>
 
   </div>

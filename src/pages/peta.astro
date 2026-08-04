@@ -1,11 +1,20 @@
 ---
 import Layout from '../components/Layout.astro';
 import { getAllTitikPeta } from '../lib/db/titik-peta';
+import { getPublishedWisata } from '../lib/db/wisata';
+import { getPublishedUmkm } from '../lib/db/umkm';
 import { getEnv } from '@lib/env';
 
 const env = getEnv();
-const titikList = env ? await getAllTitikPeta(env.DB) : [];
-const titikJson = JSON.stringify(titikList);
+const [titikList, wisataList, umkmList] = await Promise.all([
+  env ? getAllTitikPeta(env.DB) : [],
+  env ? getPublishedWisata(env.DB) : [],
+  env ? getPublishedUmkm(env.DB) : [],
+]);
+
+// Build sets of valid slugs
+const validWisataSlugs = new Set(wisataList.map(w => w.slug));
+const validUmkmSlugs = new Set(umkmList.map(u => u.slug));
 
 const counts = { wisata: 0, umkm: 0, potensi: 0 };
 for (const t of titikList) {
@@ -19,7 +28,25 @@ const demoPoints = [
 ];
 
 const finalPoints = titikList.length > 0 ? titikList : demoPoints;
-const finalJson = JSON.stringify(finalPoints);
+
+// Resolve validated href for each point on the server side
+function resolveHref(p: { jenis: string; linked_slug: string }): string {
+  switch (p.jenis) {
+    case 'wisata':
+      return validWisataSlugs.has(p.linked_slug) ? `/wisata/${p.linked_slug}` : '/wisata';
+    case 'umkm':
+      return validUmkmSlugs.has(p.linked_slug) ? `/umkm/${p.linked_slug}` : '/umkm';
+    case 'pemerintahan':
+      return '/profil';
+    case 'potensi':
+    default:
+      return '/peta';
+  }
+}
+
+const finalWithHref = finalPoints.map(p => ({ ...p, href: resolveHref(p) }));
+const finalJson = JSON.stringify(finalWithHref);
+
 const finalCounts = titikList.length > 0
   ? counts
   : { wisata: demoPoints.filter(p => p.jenis === 'wisata').length, umkm: demoPoints.filter(p => p.jenis === 'umkm').length, potensi: demoPoints.filter(p => p.jenis === 'potensi').length };
@@ -86,8 +113,7 @@ const finalCounts = titikList.length > 0
   map.on('focus', () => map.scrollWheelZoom.enable());
   map.on('blur', () => map.scrollWheelZoom.disable());
 
-  const COLORS = { wisata: '#0E9AA7', umkm: '#15803D', potensi: '#0E4A6E' };
-  const LINK = { wisata: '/wisata/', umkm: '/umkm/', potensi: '/potensi' };
+  const COLORS = { wisata: '#0E9AA7', umkm: '#15803D', potensi: '#0E4A6E', pemerintahan: '#E11D48' };
 
   const points = JSON.parse(finalJson);
   const layers = { wisata: L.layerGroup(), umkm: L.layerGroup(), potensi: L.layerGroup() };
@@ -101,10 +127,9 @@ const finalCounts = titikList.length > 0
       iconAnchor: [12, 24],
       popupAnchor: [0, -26]
     });
-    const href = p.jenis === 'potensi' ? '/potensi' : (LINK[p.jenis] ?? '/') + p.linked_slug;
     L.marker([p.lat, p.lng], { icon, title: p.label })
-      .bindPopup(`<h3 style="font-family:Lexend,sans-serif;font-weight:700;color:#0E4A6E;margin:0 0 4px">${p.label}</h3><p style="margin:0 0 6px;color:#475569;font-size:.85rem">${p.desc ?? ''}</p><a href="${href}" style="color:#0E9AA7;font-weight:600;font-size:.85rem">Lihat detail →</a>`)
-      .addTo(layers[p.jenis] ?? layers.wisata);
+      .bindPopup(`<h3 style="font-family:Lexend,sans-serif;font-weight:700;color:#0E4A6E;margin:0 0 4px">${p.label}</h3><p style="margin:0 0 6px;color:#475569;font-size:.85rem">${p.desc ?? ''}</p><a href="${p.href}" style="color:#0E9AA7;font-weight:600;font-size:.85rem">Lihat detail →</a>`)
+      .addTo(layers[p.jenis] ?? map);
   });
 
   Object.values(layers).forEach(l => l.addTo(map));

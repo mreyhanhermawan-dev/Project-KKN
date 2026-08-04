@@ -2,7 +2,7 @@ export interface TitikPeta {
   id: number;
   lat: number;
   lng: number;
-  jenis: 'wisata' | 'umkm' | 'potensi';
+  jenis: 'wisata' | 'umkm' | 'potensi' | 'pemerintahan';
   linked_slug: string;
   label: string | null;
   desc: string | null;
@@ -11,6 +11,10 @@ export interface TitikPeta {
 export async function getAllTitikPeta(db: D1Database): Promise<TitikPeta[]> {
   const r = await db.prepare('SELECT * FROM titik_peta ORDER BY id').all<TitikPeta>();
   return r.results;
+}
+
+export async function getTitikPetaById(id: number, db: D1Database): Promise<TitikPeta | null> {
+  return db.prepare('SELECT * FROM titik_peta WHERE id = ?').bind(id).first<TitikPeta>();
 }
 
 export async function createTitikPeta(

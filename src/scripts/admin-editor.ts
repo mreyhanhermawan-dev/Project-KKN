@@ -44,6 +44,37 @@ async function encodeWebp(file: File, maxPx: number): Promise<Blob> {
 
 export interface Uploaded { id: number; url: string; thumbUrl: string }
 
+export function attachFotoUploadHandlers(): void {
+  document.querySelectorAll<HTMLInputElement>('input[data-upload-manager]').forEach(input => {
+    if ((input as HTMLInputElement & { __fotoUploadBound?: boolean }).__fotoUploadBound) return;
+
+    input.addEventListener('change', async () => {
+      const files = [...(input.files ?? [])];
+      if (!files.length) return;
+
+      const status = input.parentElement?.querySelector('[data-upload-status]') as HTMLParagraphElement | null;
+      const { ownerType, ownerId, purge, defaultAlt } = input.dataset;
+
+      if (status) status.textContent = `Mengunggah ${files.length} foto...`;
+      try {
+        for (const file of files) {
+          await uploadImage(file, defaultAlt ?? '', {
+            owner_type: ownerType ?? '',
+            owner_id: ownerId ?? '',
+            purge: purge ?? '',
+          });
+        }
+        location.reload();
+      } catch (err) {
+        console.error(err);
+        if (status) status.textContent = 'Upload gagal. Periksa koneksi lalu coba lagi.';
+      }
+    });
+
+    (input as HTMLInputElement & { __fotoUploadBound?: boolean }).__fotoUploadBound = true;
+  });
+}
+
 export async function uploadImage(
   file: File,
   alt: string,

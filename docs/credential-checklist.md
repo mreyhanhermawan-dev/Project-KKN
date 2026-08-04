@@ -1,7 +1,7 @@
-# Checklist Kredensial & Serah Terima Aset Digital — Web Desa Loji
+# Checklist Kredensial & Serah Terima Aset Digital — Web Kelurahan Palabuhanratu
 
-Dokumen ini mendata **semua akun dan aset digital** situs https://loji.web.id yang harus
-diserahterimakan dari tim KKN (Rafif Muhammad Farras, IPB) kepada Pemerintah Desa Loji,
+Dokumen ini mendata **semua akun dan aset digital** situs https://palabuhanratu.web.id yang harus
+diserahterimakan dari tim KKN (M. Reyhan Hermawan, IPB) kepada Pemerintah Kelurahan Palabuhanratu,
 **paling lambat 14 Agustus 2026** (akhir masa KKN).
 
 > **Cara pakai:** centang `[x]` setiap butir saat serah terima. Simpan semua kata sandi di

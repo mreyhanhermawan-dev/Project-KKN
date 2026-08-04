@@ -38,6 +38,14 @@ const error = Astro.url.searchParams.get('error');
       </div>
 
       <div>
+        <label for="google_maps_url" class="block font-heading font-medium text-sm mb-1.5">Link Google Maps</label>
+        <input type="url" id="google_maps_url" name="google_maps_url"
+          class="w-full rounded-lg border px-4 py-3 text-base focus:outline-none"
+          style="border-color:var(--color-border); min-height:44px;"
+          placeholder="cth. https://maps.google.com/..." />
+      </div>
+
+      <div>
         <label for="status" class="block font-heading font-medium text-sm mb-1.5">Status</label>
         <select id="status" name="status"
           class="rounded-lg border px-4 py-3 text-base focus:outline-none"

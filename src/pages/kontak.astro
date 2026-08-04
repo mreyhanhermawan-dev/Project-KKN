@@ -4,7 +4,10 @@ import { getPengaturan } from '../lib/db/pengaturan';
 import { getEnv } from '@lib/env';
 
 const env = getEnv();
+import { getAllTitikPeta } from '../lib/db/titik-peta';
 const s = env ? await getPengaturan(env.DB) : {};
+const titikList = env ? await getAllTitikPeta(env.DB) : [];
+const titikPemerintahan = titikList.find(t => t.jenis === 'pemerintahan') || { lat: -6.9873, lng: 106.5575, label: "Kantor Kelurahan Palabuhanratu" };
 
 const kanal = [
   { key: 'sosial_whatsapp', label: 'WhatsApp resmi kelurahan', icon: 'message-circle', text: 'WhatsApp',
@@ -63,8 +66,8 @@ const kanal = [
     </div>
 
     <!-- Map -->
-    <div class="relative rounded-2xl overflow-hidden shadow-[0_4px_10px_rgba(15,36,51,.08)] border border-line min-h-[20rem]">
-      <div id="kontak-map" class="w-full h-full absolute inset-0"></div>
+    <div class="relative z-0 w-full rounded-2xl overflow-hidden shadow-[0_4px_10px_rgba(15,36,51,.08)] border border-line min-h-[20rem]">
+      <div id="kontak-map" class="w-full h-full absolute inset-0 z-0"></div>
       <a href="/peta"
          class="absolute bottom-4 right-4 inline-flex items-center gap-2 bg-white text-primary font-heading font-semibold px-4 py-2 rounded-lg shadow-[0_4px_10px_rgba(15,36,51,.12)] z-10 hover:bg-sand transition-colors">
         <i data-lucide="map" class="w-5 h-5"></i> Buka Peta Kelurahan
@@ -77,11 +80,11 @@ const kanal = [
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-<script is:inline>
+<script is:inline define:vars={{ ptLat: titikPemerintahan.lat, ptLng: titikPemerintahan.lng, ptLabel: titikPemerintahan.label }}>
   document.addEventListener('DOMContentLoaded', function() {
-    var map = L.map('kontak-map', { scrollWheelZoom: false }).setView([-6.9873, 106.5575], 14);
+    var map = L.map('kontak-map', { scrollWheelZoom: false }).setView([ptLat, ptLng], 14);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
-    L.marker([-6.9873, 106.5575]).addTo(map).bindPopup('<b>Kantor Kelurahan Palabuhanratu</b><br>Kec. Simpenan, Sukabumi');
+    L.marker([ptLat, ptLng]).addTo(map).bindPopup('<b>' + ptLabel + '</b><br>Kec. Palabuhanratu, Sukabumi');
     if (typeof lucide !== 'undefined') lucide.createIcons();
   });
   setTimeout(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); }, 300);

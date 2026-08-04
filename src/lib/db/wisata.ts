@@ -4,6 +4,7 @@ export interface Wisata {
   nama: string;
   deskripsi_html: string;
   status: 'draft' | 'published';
+  google_maps_url?: string;
   created_at: string;
   updated_at: string;
 }
@@ -36,7 +37,7 @@ export function toSlug(nama: string): string {
 }
 
 export async function createWisata(
-  data: { nama: string; deskripsi_html: string; status: string },
+  data: { nama: string; deskripsi_html: string; status: string; google_maps_url?: string },
   db: D1Database
 ): Promise<{ id: number; slug: string }> {
   const baseSlug = toSlug(data.nama);
@@ -46,19 +47,19 @@ export async function createWisata(
     slug = `${baseSlug}-${i++}`;
   }
   const r = await db.prepare(
-    "INSERT INTO wisata (slug, nama, deskripsi_html, status) VALUES (?, ?, ?, ?) RETURNING id"
-  ).bind(slug, data.nama, data.deskripsi_html, data.status).first<{ id: number }>();
+    "INSERT INTO wisata (slug, nama, deskripsi_html, status, google_maps_url) VALUES (?, ?, ?, ?, ?) RETURNING id"
+  ).bind(slug, data.nama, data.deskripsi_html, data.status, data.google_maps_url ?? null).first<{ id: number }>();
   return { id: r!.id, slug };
 }
 
 export async function updateWisata(
   id: number,
-  data: { nama: string; deskripsi_html: string; status: string },
+  data: { nama: string; deskripsi_html: string; status: string; google_maps_url?: string },
   db: D1Database
 ): Promise<void> {
   await db.prepare(
-    "UPDATE wisata SET nama=?, deskripsi_html=?, status=?, updated_at=datetime('now') WHERE id=?"
-  ).bind(data.nama, data.deskripsi_html, data.status, id).run();
+    "UPDATE wisata SET nama=?, deskripsi_html=?, status=?, google_maps_url=?, updated_at=datetime('now') WHERE id=?"
+  ).bind(data.nama, data.deskripsi_html, data.status, data.google_maps_url ?? null, id).run();
 }
 
 export async function deleteWisata(id: number, db: D1Database): Promise<void> {

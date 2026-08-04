@@ -1,7 +1,7 @@
-# Panduan Deployment — Web Desa Loji
+# Panduan Deployment — Web Kelurahan Palabuhanratu
 
 Dokumen ini untuk **pengembang** (mahasiswa KKN berikutnya / teknisi) yang perlu mengubah
-**kode program** situs https://loji.web.id. Perangkat desa **tidak perlu** dokumen ini —
+**kode program** situs https://palabuhanratu.web.id. Perangkat desa **tidak perlu** dokumen ini —
 pengelolaan konten sehari-hari cukup lewat panel admin (lihat `panduan-admin.md`) dan
 langsung tayang tanpa deploy.
 
