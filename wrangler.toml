@@ -1,8 +1,7 @@
 name = "web-desa-loji"
 compatibility_date = "2024-12-01"
 compatibility_flags = ["nodejs_compat"]
-workers_dev = false
-routes = [{ pattern = "loji.web.id/*", zone_name = "loji.web.id" }]
+workers_dev = true
 
 # ─── Cloudflare D1 (konten SQLite) ───────────────────────────────────────────
 [[d1_databases]]
