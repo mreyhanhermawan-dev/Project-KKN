@@ -8,7 +8,7 @@ routes = [{ pattern = "loji.web.id/*", zone_name = "loji.web.id" }]
 [[d1_databases]]
 binding = "DB"
 database_name = "web-desa-loji-db"
-database_id = "c578c1ca-4e96-4142-b0f0-4ceffe035ed9"
+database_id = "6bb8b65d-b262-476a-bb43-4efc9c8a6976"
 
 # ─── Cloudflare R2 (media binary) ────────────────────────────────────────────
 # Dinonaktifkan sampai bucket R2 dibuat di akun Cloudflare. Jika ingin
