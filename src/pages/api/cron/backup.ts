@@ -4,8 +4,12 @@ import type { APIRoute } from 'astro';
 export const GET: APIRoute = async ({ locals }) => {
   const env = getEnv();
 
-  if (!env?.DB || !env?.MEDIA_BUCKET) {
-    return new Response('Cron: env not available', { status: 503 });
+  if (!env?.DB) {
+    return new Response('Cron: database not available', { status: 503 });
+  }
+
+  if (!env?.MEDIA_BUCKET) {
+    return new Response('Cron: media storage not available', { status: 503 });
   }
 
   try {

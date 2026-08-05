@@ -9,7 +9,8 @@ const MAX_BYTES = 5 * 1024 * 1024;
 export const POST: APIRoute = async ({ request }) => {
   const env = getEnv();
   if (!env) return new Response('Server tidak siap', { status: 503 });
-  if (!env.DB || !env.MEDIA_BUCKET) return new Response('Binding database atau media belum tersedia', { status: 503 });
+  if (!env.DB) return new Response('Binding database belum tersedia', { status: 503 });
+  if (!env.MEDIA_BUCKET) return new Response('Media storage belum tersedia. Buat bucket R2 terlebih dahulu.', { status: 503 });
 
   const fd = await request.formData();
   const display = fd.get('display');

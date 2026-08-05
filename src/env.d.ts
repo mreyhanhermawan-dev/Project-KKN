@@ -6,7 +6,7 @@ type KVNamespace = import('@cloudflare/workers-types').KVNamespace;
 
 interface Env {
   DB: D1Database;
-  MEDIA_BUCKET: R2Bucket;
+  MEDIA_BUCKET?: R2Bucket;
   SESSION_KV: KVNamespace;
   ANALYTICS_TOKEN?: string;
 }

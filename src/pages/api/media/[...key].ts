@@ -6,6 +6,7 @@ export const GET: APIRoute = async ({ params, locals }) => {
   const env = getEnv();
 
   if (!env || !key) return new Response('Not found', { status: 404 });
+  if (!env.MEDIA_BUCKET) return new Response('Media storage belum tersedia', { status: 503 });
 
   // Only public uploads live under `media/`. Everything else in the bucket
   // (e.g. `backups/` DB dumps containing admin password hashes) must never be

@@ -11,9 +11,11 @@ database_name = "web-desa-loji-db"
 database_id = "c578c1ca-4e96-4142-b0f0-4ceffe035ed9"
 
 # ─── Cloudflare R2 (media binary) ────────────────────────────────────────────
-[[r2_buckets]]
-binding = "MEDIA_BUCKET"
-bucket_name = "web-desa-loji-media"
+# Dinonaktifkan sampai bucket R2 dibuat di akun Cloudflare. Jika ingin
+# mengaktifkan media storage, uncomment blok di bawah dan buat bucket terlebih dahulu.
+# [[r2_buckets]]
+# binding = "MEDIA_BUCKET"
+# bucket_name = "web-desa-loji-media"
 
 # ─── Cloudflare KV (sesi TTL) ────────────────────────────────────────────────
 [[kv_namespaces]]

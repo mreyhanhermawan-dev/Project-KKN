@@ -9,8 +9,12 @@ export async function saveMedia(
   thumbBlob: Blob,
   alt: string,
   db: D1Database,
-  bucket: R2Bucket
+  bucket?: R2Bucket
 ): Promise<UploadResult> {
+  if (!bucket) {
+    throw new Error('R2 bucket belum dikonfigurasi');
+  }
+
   const ts = Date.now();
   const rand = Math.random().toString(36).slice(2, 8);
   const displayKey = `media/${ts}-${rand}-display.webp`;
@@ -29,7 +33,8 @@ export async function saveMedia(
   return { displayKey, thumbKey, id: result!.id };
 }
 
-export async function getMediaUrl(key: string, bucket: R2Bucket): Promise<string | null> {
+export async function getMediaUrl(key: string, bucket?: R2Bucket): Promise<string | null> {
+  if (!bucket) return null;
   const obj = await bucket.get(key);
   if (!obj) return null;
   // Return a signed or public URL. For now, return the R2 public URL pattern
@@ -40,7 +45,7 @@ export async function getMediaUrl(key: string, bucket: R2Bucket): Promise<string
 export async function deleteMedia(
   mediaId: number,
   db: D1Database,
-  bucket: R2Bucket
+  bucket?: R2Bucket
 ): Promise<void> {
   const row = await db
     .prepare('SELECT r2_key_display, r2_key_thumb FROM media WHERE id = ?')
@@ -48,10 +53,12 @@ export async function deleteMedia(
     .first<{ r2_key_display: string; r2_key_thumb: string }>();
   if (!row) return;
 
-  await Promise.all([
-    bucket.delete(row.r2_key_display),
-    bucket.delete(row.r2_key_thumb),
-  ]);
+  if (bucket) {
+    await Promise.all([
+      bucket.delete(row.r2_key_display),
+      bucket.delete(row.r2_key_thumb),
+    ]);
+  }
 
   await db.prepare('DELETE FROM media_link WHERE media_id = ?').bind(mediaId).run();
   await db.prepare('DELETE FROM media WHERE id = ?').bind(mediaId).run();
