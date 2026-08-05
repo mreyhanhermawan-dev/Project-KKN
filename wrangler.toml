@@ -18,9 +18,15 @@ database_id = "c578c1ca-4e96-4142-b0f0-4ceffe035ed9"
 # bucket_name = "web-desa-loji-media"
 
 # ─── Cloudflare KV (sesi TTL) ────────────────────────────────────────────────
+# Astro session storage memakai binding "SESSION". Kita arahkan ke namespace
+# yang sudah ada di akun agar Wrangler tidak mencoba membuat ulang.
+[[kv_namespaces]]
+binding = "SESSION"
+id = "f086c8e11015471e8355d1cad46a7ca4"
+
 [[kv_namespaces]]
 binding = "SESSION_KV"
-id = "12efcdd486e54c86a30f5db20351a1ab"
+id = "f086c8e11015471e8355d1cad46a7ca4"
 
 # ─── Cron triggers (dinonaktifkan) ───────────────────────────────────────────
 # Backup mingguan otomatis dimatikan. Backup dilakukan manual lewat tombol
