@@ -59,5 +59,21 @@ export async function deleteSession(sessionId: string, kv: KVNamespace): Promise
   await kv.delete(`session:${sessionId}`);
 }
 
+export function isSecureCookieRequired(url: URL | string): boolean {
+  const parsed = typeof url === 'string' ? new URL(url) : url;
+  const localhostLike = ['localhost', '127.0.0.1', '0.0.0.0'].includes(parsed.hostname);
+  return parsed.protocol === 'https:' && !localhostLike;
+}
+
+export function getSessionCookieOptions(url: URL | string) {
+  return {
+    httpOnly: true,
+    secure: isSecureCookieRequired(url),
+    sameSite: 'lax' as const,
+    path: '/',
+    maxAge: SESSION_TTL_SECONDS,
+  };
+}
+
 export const SESSION_COOKIE = 'dl_session';
 export const SESSION_TTL = SESSION_TTL_SECONDS;

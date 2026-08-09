@@ -1,6 +1,6 @@
 import { getEnv } from '@lib/env';
 import { defineMiddleware } from 'astro:middleware';
-import { validateSession, SESSION_COOKIE, generateSessionId } from './lib/auth/session';
+import { validateSession, SESSION_COOKIE, generateSessionId, isSecureCookieRequired } from './lib/auth/session';
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const { pathname } = context.url;
@@ -15,7 +15,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     csrfToken = generateSessionId();
     context.cookies.set('csrf_token', csrfToken, {
       httpOnly: true,
-      secure: true,
+      secure: isSecureCookieRequired(context.url),
       sameSite: 'lax',
       path: '/',
     });

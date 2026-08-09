@@ -1,6 +1,6 @@
 import { getEnv } from '@lib/env';
 import type { APIRoute } from 'astro';
-import { verifyPassword, createSession, generateSessionId, SESSION_COOKIE, SESSION_TTL } from '../../../lib/auth/session';
+import { verifyPassword, createSession, generateSessionId, SESSION_COOKIE, SESSION_TTL, isSecureCookieRequired } from '../../../lib/auth/session';
 
 export const POST: APIRoute = async ({ request, locals, redirect, cookies }) => {
   const formData = await request.formData();
@@ -17,7 +17,11 @@ export const POST: APIRoute = async ({ request, locals, redirect, cookies }) => 
     if (username === 'admin' && password === 'admin') {
       const sessionId = generateSessionId();
       cookies.set(SESSION_COOKIE, sessionId, {
-        httpOnly: true, secure: false, sameSite: 'lax', path: '/', maxAge: SESSION_TTL,
+        httpOnly: true,
+        secure: isSecureCookieRequired(new URL(request.url)),
+        sameSite: 'lax',
+        path: '/',
+        maxAge: SESSION_TTL,
       });
       return redirect('/admin/dasbor');
     }
@@ -51,7 +55,7 @@ export const POST: APIRoute = async ({ request, locals, redirect, cookies }) => 
 
   cookies.set(SESSION_COOKIE, sessionId, {
     httpOnly: true,
-    secure: true,
+    secure: isSecureCookieRequired(new URL(request.url)),
     sameSite: 'lax',
     path: '/',
     maxAge: SESSION_TTL,
