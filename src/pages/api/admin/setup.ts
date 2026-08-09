@@ -26,6 +26,11 @@ export const POST: APIRoute = async ({ request, locals, redirect, cookies }) => 
     return redirect('/admin/setup?error=Format+email+tidak+valid.');
   }
 
+  const existingEmail = await env.DB.prepare('SELECT id FROM admin_user WHERE email = ?').bind(email).first();
+  if (existingEmail) {
+    return redirect('/admin/setup?error=Email+ini+sudah+terdaftar.+Gunakan+email+lain.');
+  }
+
   if (password !== confirmPassword) {
     return redirect('/admin/setup?error=Konfirmasi+kata+sandi+tidak+cocok.');
   }

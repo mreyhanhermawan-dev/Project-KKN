@@ -137,7 +137,14 @@ export const POST: APIRoute = async ({ request, redirect, locals }) => {
       return redirect('/admin/pengaturan?admin_err=exists');
     }
 
-    // 6. Insert new admin
+    // 6. Check duplicate email
+    const existingEmail = await env.DB.prepare('SELECT id FROM admin_user WHERE email = ?')
+      .bind(email).first();
+    if (existingEmail) {
+      return redirect('/admin/pengaturan?admin_err=email_exists');
+    }
+
+    // 7. Insert new admin
     const hash = await hashPassword(password);
     await env.DB.prepare('INSERT INTO admin_user (username, password_hash, email) VALUES (?, ?, ?)')
       .bind(username, hash, email).run();
