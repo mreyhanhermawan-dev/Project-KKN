@@ -4,10 +4,10 @@ import { verifyPassword, createSession, generateSessionId, SESSION_COOKIE, SESSI
 
 export const POST: APIRoute = async ({ request, locals, redirect, cookies }) => {
   const formData = await request.formData();
-  const username = (formData.get('username') as string)?.trim();
+  const usernameOrEmail = (formData.get('username') as string)?.trim();
   const password = formData.get('password') as string;
 
-  if (!username || !password) {
+  if (!usernameOrEmail || !password) {
     return redirect('/admin/login?error=1');
   }
 
@@ -38,8 +38,8 @@ export const POST: APIRoute = async ({ request, locals, redirect, cookies }) => 
     return redirect('/admin/login?error=locked');
   }
 
-  const row = await env.DB.prepare('SELECT password_hash FROM admin_user WHERE username = ?')
-    .bind(username).first<{ password_hash: string }>();
+  const row = await env.DB.prepare('SELECT username, password_hash FROM admin_user WHERE username = ? OR email = ?')
+    .bind(usernameOrEmail, usernameOrEmail).first<{ username: string; password_hash: string }>();
 
   if (!row || !(await verifyPassword(password, row.password_hash))) {
     // Re-putting refreshes the TTL, so repeated tries extend the lockout window.
@@ -50,8 +50,9 @@ export const POST: APIRoute = async ({ request, locals, redirect, cookies }) => 
   // Successful login clears the failure counter for this IP.
   if (rlKey) await env.SESSION_KV.delete(rlKey);
 
+  const sessionUsername = row.username;
   const sessionId = generateSessionId();
-  await createSession(sessionId, username, env.SESSION_KV);
+  await createSession(sessionId, sessionUsername, env.SESSION_KV);
 
   cookies.set(SESSION_COOKIE, sessionId, {
     httpOnly: true,

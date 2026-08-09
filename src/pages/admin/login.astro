@@ -60,7 +60,7 @@ const error = Astro.url.searchParams.get('error');
       <div class="space-y-4">
         <div>
           <label for="username" class="block font-heading font-medium text-sm mb-1.5" style="color:var(--color-text);">
-            Nama Pengguna <span aria-label="wajib">*</span>
+            Nama Pengguna atau Email <span aria-label="wajib">*</span>
             <span class="font-normal text-text-muted">(wajib)</span>
           </label>
           <input
@@ -69,6 +69,7 @@ const error = Astro.url.searchParams.get('error');
             name="username"
             required
             autocomplete="username"
+            placeholder="namauser atau admin@email.com"
             class="w-full rounded-lg border px-4 py-3 text-base font-body transition-colors duration-150 focus:outline-none focus-visible:ring-2"
             style="border-color:var(--color-border); min-height:44px; --tw-ring-color:var(--color-accent);"
           />
