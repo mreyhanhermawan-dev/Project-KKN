@@ -10,11 +10,9 @@ database_name = "web-desa-loji-db"
 database_id = "6bb8b65d-b262-476a-bb43-4efc9c8a6976"
 
 # ─── Cloudflare R2 (media binary) ────────────────────────────────────────────
-# Dinonaktifkan sampai bucket R2 dibuat di akun Cloudflare. Jika ingin
-# mengaktifkan media storage, uncomment blok di bawah dan buat bucket terlebih dahulu.
-# [[r2_buckets]]
-# binding = "MEDIA_BUCKET"
-# bucket_name = "web-desa-loji-media"
+[[r2_buckets]]
+binding = "MEDIA_BUCKET"
+bucket_name = "web-desa-loji-media"
 
 # ─── Cloudflare KV (sesi TTL) ────────────────────────────────────────────────
 # Astro session storage memakai binding "SESSION". Kita arahkan ke namespace
