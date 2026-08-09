@@ -49,7 +49,7 @@ const error = Astro.url.searchParams.get('error');
       <div role="alert" class="mb-4 p-3 rounded-lg text-sm font-medium"
         style={error.includes('berhasil') ? 'background:#DCFCE7; color:#166534; border:1px solid #BBF7D0;' : 'background:#FEE2E2; color:#991B1B; border:1px solid #FECACA;'}>
         {error === 'locked'
-          ? 'Terlalu banyak percobaan masuk. Silakan coba lagi dalam beberapa menit.'
+          ? 'Terlalu banyak percobaan masuk. Silakan coba lagi dalam 5 menit.'
           : error}
       </div>
     )}
