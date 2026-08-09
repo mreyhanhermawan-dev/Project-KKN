@@ -2,15 +2,22 @@
 import '../../styles/global.css';
 import { getEnv } from '@lib/env';
 
+const env = getEnv();
+
 // If already logged in, redirect to dasbor
 const sessionId = Astro.cookies.get('dl_session')?.value;
 if (sessionId) {
-  const env = getEnv();
   if (env) {
     const { validateSession } = await import('../../lib/auth/session');
     const user = await validateSession(sessionId, env.SESSION_KV);
     if (user) return Astro.redirect('/admin/dasbor');
   }
+}
+
+let adminExists = false;
+if (env) {
+  const row = await env.DB.prepare('SELECT id FROM admin_user LIMIT 1').first();
+  if (row) adminExists = true;
 }
 
 const error = Astro.url.searchParams.get('error');
@@ -37,17 +44,19 @@ const error = Astro.url.searchParams.get('error');
       <p class="text-text-muted text-sm mt-1">Pemerintah Kelurahan Palabuhanratu</p>
     </div>
 
-    <!-- Error alert -->
+    <!-- Error / Success alert -->
     {error && (
-      <div role="alert" class="mb-4 p-3 rounded-lg text-sm font-medium" style="background:#FEE2E2; color:#991B1B; border:1px solid #FECACA;">
+      <div role="alert" class="mb-4 p-3 rounded-lg text-sm font-medium"
+        style={error.includes('berhasil') ? 'background:#DCFCE7; color:#166534; border:1px solid #BBF7D0;' : 'background:#FEE2E2; color:#991B1B; border:1px solid #FECACA;'}>
         {error === 'locked'
           ? 'Terlalu banyak percobaan masuk. Silakan coba lagi dalam beberapa menit.'
-          : 'Nama pengguna atau kata sandi salah.'}
+          : error}
       </div>
     )}
 
     <!-- Login form -->
     <form method="POST" action="/api/admin/login" class="bg-white rounded-xl p-6" style="box-shadow:var(--shadow-md);">
+      <input type="hidden" name="csrf_token" value={Astro.locals.csrfToken} />
       <div class="space-y-4">
         <div>
           <label for="username" class="block font-heading font-medium text-sm mb-1.5" style="color:var(--color-text);">
@@ -86,12 +95,19 @@ const error = Astro.url.searchParams.get('error');
         >
           Masuk
         </button>
+        <div class="text-center">
+          <a href="/admin/lupa-password" class="text-xs text-text-muted hover:text-accent hover:underline transition-colors">
+            Lupa kata sandi?
+          </a>
+        </div>
       </div>
     </form>
 
-    <p class="text-center text-xs text-text-muted mt-6">
-      Belum punya akun? <a href="/admin/setup" class="text-accent hover:underline focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-accent rounded">Buat akun pertama</a>
-    </p>
+    {!adminExists && (
+      <p class="text-center text-xs text-text-muted mt-6">
+        Belum punya akun? <a href="/admin/setup" class="text-accent hover:underline focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-accent rounded">Buat akun pertama</a>
+      </p>
+    )}
   </div>
 
 </body>

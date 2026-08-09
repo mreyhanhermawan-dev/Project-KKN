@@ -1,12 +1,51 @@
 import { getEnv } from '@lib/env';
 import { defineMiddleware } from 'astro:middleware';
-import { validateSession, SESSION_COOKIE } from './lib/auth/session';
+import { validateSession, SESSION_COOKIE, generateSessionId } from './lib/auth/session';
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const { pathname } = context.url;
+  const method = context.request.method;
 
   const isAdminPage = pathname.startsWith('/admin');
   const isAdminApi = pathname.startsWith('/api/admin');
+
+  // 1. Generate/Get CSRF Token
+  let csrfToken = context.cookies.get('csrf_token')?.value;
+  if (!csrfToken) {
+    csrfToken = generateSessionId();
+    context.cookies.set('csrf_token', csrfToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      path: '/',
+    });
+  }
+  context.locals.csrfToken = csrfToken;
+
+  // 2. Validate CSRF on POST/PUT/DELETE/PATCH for admin routes
+  if ((isAdminPage || isAdminApi) && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+    let clientToken = context.request.headers.get('X-CSRF-Token');
+
+    if (!clientToken) {
+      try {
+        const clonedReq = context.request.clone();
+        const fd = await clonedReq.formData();
+        clientToken = fd.get('csrf_token') as string;
+      } catch {
+        // Not multipart/form-data or empty
+      }
+    }
+
+    if (!clientToken || clientToken !== csrfToken) {
+      if (isAdminApi) {
+        return new Response(JSON.stringify({ error: 'CSRF token mismatch' }), {
+          status: 403,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      return new Response('CSRF token mismatch', { status: 403 });
+    }
+  }
 
   // Public auth endpoints: must stay reachable WITHOUT an existing session.
   // (setup self-guards: it only works while no admin user exists.)
@@ -14,10 +53,14 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const isSetupPage = pathname === '/admin/setup';
   const isApiLogin = pathname === '/api/admin/login';
   const isApiSetup = pathname === '/api/admin/setup';
+  const isLupaPassword = pathname === '/admin/lupa-password';
+  const isResetPassword = pathname === '/admin/reset-password';
+  const isApiLupaPassword = pathname === '/api/admin/lupa-password';
+  const isApiResetPassword = pathname === '/api/admin/reset-password';
 
   const needsAuth =
-    (isAdminPage && !isLoginPage && !isSetupPage) ||
-    (isAdminApi && !isApiLogin && !isApiSetup);
+    (isAdminPage && !isLoginPage && !isSetupPage && !isLupaPassword && !isResetPassword) ||
+    (isAdminApi && !isApiLogin && !isApiSetup && !isApiLupaPassword && !isApiResetPassword);
 
   if (needsAuth) {
     const env = getEnv();

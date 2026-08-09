@@ -6,6 +6,17 @@ import { getEnv } from '@lib/env';
 const env = getEnv();
 const s = env ? await getPengaturan(env.DB) : {};
 const saved = Astro.url.searchParams.get('saved');
+const pwdSaved = Astro.url.searchParams.get('pwd_saved');
+const pwdErr = Astro.url.searchParams.get('pwd_err');
+const adminSaved = Astro.url.searchParams.get('admin_saved');
+const adminDeleted = Astro.url.searchParams.get('admin_deleted');
+const adminErr = Astro.url.searchParams.get('admin_err');
+
+const currentUsername = Astro.locals.user?.username;
+
+const admins = env 
+  ? await env.DB.prepare('SELECT id, username, email, created_at FROM admin_user ORDER BY id ASC').all<{ id: number; username: string; email: string | null; created_at: string }>().then(r => r.results || [])
+  : [];
 
 const stUmum = JSON.parse(s.stat_umum ?? '{}');
 const dusun = JSON.parse(s.stat_dusun ?? '[]');
@@ -22,6 +33,45 @@ const inputStyle = 'border-color:var(--color-border); min-height:40px;';
   {saved && (
     <div role="status" class="mb-4 p-3 rounded-lg text-sm font-medium" style="background:#D1FAE5; color:#065F46; border:1px solid #6EE7B7;">
       Pengaturan berhasil disimpan.
+    </div>
+  )}
+
+  {pwdSaved && (
+    <div role="status" class="mb-4 p-3 rounded-lg text-sm font-medium" style="background:#D1FAE5; color:#065F46; border:1px solid #6EE7B7;">
+      Kata sandi berhasil diperbarui.
+    </div>
+  )}
+
+  {pwdErr && (
+    <div role="alert" class="mb-4 p-3 rounded-lg text-sm font-medium" style="background:#FEE2E2; color:#991B1B; border:1px solid #FECACA;">
+      {pwdErr === 'wrong_current' && 'Kata sandi saat ini salah.'}
+      {pwdErr === 'weak' && 'Kata sandi baru terlalu lemah (minimal 8 karakter dengan 3 kriteria kekuatan).'}
+      {pwdErr === 'mismatch' && 'Konfirmasi kata sandi baru tidak cocok.'}
+      {pwdErr === '1' && 'Gagal memperbarui kata sandi.'}
+    </div>
+  )}
+
+  {adminSaved && (
+    <div role="status" class="mb-4 p-3 rounded-lg text-sm font-medium" style="background:#D1FAE5; color:#065F46; border:1px solid #6EE7B7;">
+      Admin baru berhasil ditambahkan.
+    </div>
+  )}
+
+  {adminDeleted && (
+    <div role="status" class="mb-4 p-3 rounded-lg text-sm font-medium" style="background:#D1FAE5; color:#065F46; border:1px solid #6EE7B7;">
+      Admin berhasil dihapus.
+    </div>
+  )}
+
+  {adminErr && (
+    <div role="alert" class="mb-4 p-3 rounded-lg text-sm font-medium" style="background:#FEE2E2; color:#991B1B; border:1px solid #FECACA;">
+      {adminErr === 'limit' && 'Batas maksimal 3 akun admin telah tercapai.'}
+      {adminErr === 'exists' && 'Nama pengguna sudah terdaftar.'}
+      {adminErr === 'username' && 'Format nama pengguna tidak valid. Gunakan 3-20 karakter berupa huruf, angka, strip, atau garis bawah.'}
+      {adminErr === 'weak' && 'Kata sandi terlalu lemah (minimal 8 karakter dengan 3 kriteria kekuatan).'}
+      {adminErr === 'delete_last' && 'Tidak dapat menghapus admin terakhir.'}
+      {adminErr === 'delete_self' && 'Anda tidak dapat menghapus akun Anda sendiri yang sedang aktif.'}
+      {adminErr === '1' && 'Gagal memproses permintaan.'}
     </div>
   )}
 
@@ -207,6 +257,185 @@ const inputStyle = 'border-color:var(--color-border); min-height:40px;';
       </form>
     </div>
 
+    <!-- Ubah Kata Sandi -->
+    <div class="bg-white rounded-xl border border-border p-6" style="box-shadow:var(--shadow-sm);">
+      <h2 class="font-heading font-bold text-xl mb-1" style="color:var(--color-primary);">Ubah Kata Sandi</h2>
+      <p class="text-xs text-text-muted mb-4">Ganti kata sandi akun admin Anda. Disarankan menggunakan kombinasi kata sandi yang kuat.</p>
+      
+      <form method="POST" action="/api/admin/pengaturan" class="space-y-4">
+        <input type="hidden" name="_form" value="password" />
+        
+        <div>
+          <label for="current_password" class="block font-heading font-medium text-sm mb-1.5">Kata Sandi Saat Ini</label>
+          <input type="password" id="current_password" name="current_password" required class={inputCls} style={inputStyle} />
+        </div>
+        
+        <div>
+          <label for="new_password" class="block font-heading font-medium text-sm mb-1.5">Kata Sandi Baru</label>
+          <input type="password" id="new_password" name="new_password" required minlength="8" class={inputCls} style={inputStyle} />
+          
+          <!-- Password Strength Meter -->
+          <div class="mt-2.5 space-y-2">
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-text-muted">Kekuatan Kata Sandi:</span>
+              <span id="pwd-strength-text" class="font-semibold text-slate-400">Belum diisi</span>
+            </div>
+            <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+              <div id="pwd-strength-bar" class="h-full w-0 transition-all duration-300 ease-out bg-slate-400"></div>
+            </div>
+            
+            <!-- Criteria Checklist -->
+            <div class="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px] pt-1 border-t border-slate-100 mt-2">
+              <div id="pwd-crit-length" class="flex items-center gap-1.5 text-slate-400 transition-colors">
+                <span class="status-icon font-bold">▪</span> Minimal 8 karakter
+              </div>
+              <div id="pwd-crit-upper" class="flex items-center gap-1.5 text-slate-400 transition-colors">
+                <span class="status-icon font-bold">▪</span> Huruf Besar (A-Z)
+              </div>
+              <div id="pwd-crit-lower" class="flex items-center gap-1.5 text-slate-400 transition-colors">
+                <span class="status-icon font-bold">▪</span> Huruf Kecil (a-z)
+              </div>
+              <div id="pwd-crit-number" class="flex items-center gap-1.5 text-slate-400 transition-colors">
+                <span class="status-icon font-bold">▪</span> Angka (0-9)
+              </div>
+              <div id="pwd-crit-special" class="flex items-center gap-1.5 text-slate-400 transition-colors col-span-2">
+                <span class="status-icon font-bold">▪</span> Karakter Khusus (@$!%*?&#)
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div>
+          <label for="confirm_new_password" class="block font-heading font-medium text-sm mb-1.5">Konfirmasi Kata Sandi Baru</label>
+          <input type="password" id="confirm_new_password" name="confirm_new_password" required minlength="8" class={inputCls} style={inputStyle} />
+          <p id="pwd-confirm-error" class="text-xs text-red-500 mt-1 hidden">Kata sandi tidak cocok.</p>
+        </div>
+        
+        <button type="submit" id="submit-pwd-btn" disabled class="px-5 py-2 rounded-lg font-heading font-semibold text-white text-sm cursor-not-allowed opacity-50 transition-all duration-200" style="background:var(--color-cta); min-height:44px;">
+          Perbarui Kata Sandi
+        </button>
+      </form>
+    </div>
+
+    <!-- Manajemen Akun Admin -->
+    <div class="bg-white rounded-xl border border-border p-6" style="box-shadow:var(--shadow-sm);">
+      <h2 class="font-heading font-bold text-xl mb-1" style="color:var(--color-primary);">Manajemen Akun Admin</h2>
+      <p class="text-xs text-text-muted mb-4">Kelola akun admin yang terdaftar. Maksimal 3 admin dapat didaftarkan.</p>
+
+      <!-- List of admins -->
+      <div class="overflow-x-auto mb-6">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-left text-text-muted text-xs border-b border-slate-100">
+              <th class="pb-2">Nama Pengguna</th>
+              <th class="pb-2">Email</th>
+              <th class="pb-2">Dibuat Pada</th>
+              <th class="pb-2 text-right">Aksi</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-50">
+            {admins.map((adm) => (
+              <tr>
+                <td class="py-2.5 font-medium">{adm.username} {adm.username === currentUsername && <span class="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded text-text-muted ml-1">Aktif</span>}</td>
+                <td class="py-2.5 text-text-muted text-xs">{adm.email ?? <span class="italic text-slate-300">-</span>}</td>
+                <td class="py-2.5 text-text-muted text-xs">{adm.created_at}</td>
+                <td class="py-2.5 text-right">
+                  {admins.length > 1 && adm.username !== currentUsername ? (
+                    <form method="POST" action="/api/admin/pengaturan" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus admin ini?')">
+                      <input type="hidden" name="csrf_token" value={Astro.locals.csrfToken} />
+                      <input type="hidden" name="_form" value="delete_admin" />
+                      <input type="hidden" name="admin_id" value={adm.id} />
+                      <button type="submit" class="text-xs font-semibold text-red-500 hover:text-red-700 cursor-pointer">Hapus</button>
+                    </form>
+                  ) : (
+                    <span class="text-xs text-slate-300">-</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Add admin form (only shown if admins count < 3) -->
+      {admins.length < 3 ? (
+        <fieldset class="border border-border rounded-lg p-4 bg-slate-50/50">
+          <legend class="font-heading font-semibold text-sm px-2 text-primary">Tambah Admin Baru</legend>
+          <form method="POST" action="/api/admin/pengaturan" class="space-y-4">
+            <input type="hidden" name="csrf_token" value={Astro.locals.csrfToken} />
+            <input type="hidden" name="_form" value="add_admin" />
+            
+            <div>
+              <label for="new_admin_username" class="block font-heading font-medium text-xs mb-1">Nama Pengguna baru</label>
+              <input type="text" id="new_admin_username" name="username" required
+                pattern="[a-zA-Z0-9_-]{3,20}"
+                title="3-20 karakter berupa huruf, angka, garis bawah (_), atau strip (-)"
+                class={inputCls} style={inputStyle} />
+              <p id="new-admin-user-error" class="text-[10px] text-red-500 mt-0.5 hidden">Format nama pengguna tidak valid.</p>
+            </div>
+
+            <div>
+              <label for="new_admin_email" class="block font-heading font-medium text-xs mb-1">Alamat Email</label>
+              <input type="email" id="new_admin_email" name="email" required
+                placeholder="contoh@email.com"
+                autocomplete="off"
+                class={inputCls} style={inputStyle} />
+              <p id="new-admin-email-error" class="text-[10px] text-red-500 mt-0.5 hidden">Format email tidak valid.</p>
+            </div>
+
+            <div>
+              <label for="new_admin_password" class="block font-heading font-medium text-xs mb-1">Kata Sandi</label>
+              <input type="password" id="new_admin_password" name="password" required minlength="8" class={inputCls} style={inputStyle} />
+              
+              <!-- Password Strength Meter -->
+              <div class="mt-2 space-y-1.5">
+                <div class="flex justify-between items-center text-[10px]">
+                  <span class="text-text-muted">Kekuatan Kata Sandi:</span>
+                  <span id="new-admin-strength-text" class="font-semibold text-slate-400">Belum diisi</span>
+                </div>
+                <div class="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
+                  <div id="new-admin-strength-bar" class="h-full w-0 transition-all duration-300 ease-out bg-slate-400"></div>
+                </div>
+                
+                <!-- Criteria Checklist -->
+                <div class="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[10px] pt-1 border-t border-slate-100">
+                  <div id="new-admin-crit-length" class="flex items-center gap-1 text-slate-400">
+                    <span class="status-icon font-bold">▪</span> Min 8 karakter
+                  </div>
+                  <div id="new-admin-crit-upper" class="flex items-center gap-1 text-slate-400">
+                    <span class="status-icon font-bold">▪</span> Huruf Besar
+                  </div>
+                  <div id="new-admin-crit-lower" class="flex items-center gap-1 text-slate-400">
+                    <span class="status-icon font-bold">▪</span> Huruf Kecil
+                  </div>
+                  <div id="new-admin-crit-number" class="flex items-center gap-1 text-slate-400">
+                    <span class="status-icon font-bold">▪</span> Angka
+                  </div>
+                  <div id="new-admin-crit-special" class="flex items-center gap-1 text-slate-400 col-span-2">
+                    <span class="status-icon font-bold">▪</span> Karakter Khusus (@$!%*)
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label for="new_admin_confirm_password" class="block font-heading font-medium text-xs mb-1">Konfirmasi Kata Sandi</label>
+              <input type="password" id="new_admin_confirm_password" name="confirm_password" required minlength="8" class={inputCls} style={inputStyle} />
+              <p id="new-admin-confirm-error" class="text-[10px] text-red-500 mt-0.5 hidden">Kata sandi tidak cocok.</p>
+            </div>
+
+            <button type="submit" id="submit-new-admin-btn" disabled class="px-4 py-2 rounded-lg font-heading font-semibold text-white text-xs cursor-not-allowed opacity-50 transition-all duration-200" style="background:var(--color-cta); min-height:36px;">
+              Tambah Admin
+            </button>
+          </form>
+        </fieldset>
+      ) : (
+        <div class="p-3 rounded-lg text-xs font-medium text-center" style="background:#EFF6FF; color:#1E40AF; border:1px solid #BFDBFE;">
+          Batas maksimal 3 akun admin telah tercapai. Hapus salah satu admin jika ingin menambah baru.
+        </div>
+      )}
+    </div>
+
   </div>
 
 </AdminLayout>
@@ -287,6 +516,337 @@ const inputStyle = 'border-color:var(--color-border); min-height:40px;';
       `;
       containerPencaharian?.appendChild(div);
     });
+  });
+</script>
+
+<script is:inline>
+  document.addEventListener('DOMContentLoaded', () => {
+    const newPwd = document.getElementById('new_password');
+    const confirmNewPwd = document.getElementById('confirm_new_password');
+    const confirmErr = document.getElementById('pwd-confirm-error');
+    const strengthBar = document.getElementById('pwd-strength-bar');
+    const strengthText = document.getElementById('pwd-strength-text');
+    const submitBtn = document.getElementById('submit-pwd-btn');
+
+    // Criteria elements
+    const critLength = document.getElementById('pwd-crit-length');
+    const critUpper = document.getElementById('pwd-crit-upper');
+    const critLower = document.getElementById('pwd-crit-lower');
+    const critNumber = document.getElementById('pwd-crit-number');
+    const critSpecial = document.getElementById('pwd-crit-special');
+
+    if (!newPwd || !confirmNewPwd) return;
+
+    let isStrong = false;
+
+    function checkPwdStrength() {
+      const val = newPwd.value;
+      if (!val) {
+        strengthBar.style.width = '0%';
+        strengthBar.style.backgroundColor = '#CBD5E1';
+        strengthText.textContent = 'Belum diisi';
+        strengthText.className = 'font-semibold text-slate-400';
+        isStrong = false;
+        
+        resetPwdCrit(critLength);
+        resetPwdCrit(critUpper);
+        resetPwdCrit(critLower);
+        resetPwdCrit(critNumber);
+        resetPwdCrit(critSpecial);
+        return;
+      }
+
+      const checks = {
+        length: val.length >= 8,
+        upper: /[A-Z]/.test(val),
+        lower: /[a-z]/.test(val),
+        number: /\d/.test(val),
+        special: /[@$!%*?&#_.\-+=~`'":;?,<>|\(\)\[\]\{\}\\\/^\*]/.test(val)
+      };
+
+      updatePwdCrit(critLength, checks.length);
+      updatePwdCrit(critUpper, checks.upper);
+      updatePwdCrit(critLower, checks.lower);
+      updatePwdCrit(critNumber, checks.number);
+      updatePwdCrit(critSpecial, checks.special);
+
+      const score = Object.values(checks).filter(Boolean).length;
+
+      let color = '#EF4444'; // Red
+      let text = 'Sangat Lemah';
+      let width = '20%';
+      let textColorCls = 'text-red-500 font-semibold';
+
+      if (score === 2) {
+        color = '#F97316'; // Orange
+        text = 'Lemah';
+        width = '40%';
+        textColorCls = 'text-orange-500 font-semibold';
+      } else if (score === 3) {
+        color = '#EAB308'; // Yellow
+        text = 'Sedang';
+        width = '65%';
+        textColorCls = 'text-yellow-600 font-semibold';
+      } else if (score >= 4) {
+        color = '#22C55E'; // Green
+        text = 'Kuat';
+        width = '100%';
+        textColorCls = 'text-green-600 font-semibold';
+      }
+
+      strengthBar.style.width = width;
+      strengthBar.style.backgroundColor = color;
+      strengthText.textContent = text;
+      strengthText.className = textColorCls;
+
+      isStrong = score >= 3 && checks.length;
+    }
+
+    function validatePwdForm() {
+      checkPwdStrength();
+      
+      const pwdVal = newPwd.value;
+      const confirmVal = confirmNewPwd.value;
+      
+      let matches = false;
+      
+      if (confirmVal) {
+        if (pwdVal !== confirmVal) {
+          confirmErr.classList.remove('hidden');
+          matches = false;
+        } else {
+          confirmErr.classList.add('hidden');
+          matches = true;
+        }
+      } else {
+        confirmErr.classList.add('hidden');
+        matches = false;
+      }
+
+      if (isStrong && matches) {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('cursor-not-allowed', 'opacity-50');
+        submitBtn.classList.add('cursor-pointer');
+      } else {
+        submitBtn.disabled = true;
+        submitBtn.classList.add('cursor-not-allowed', 'opacity-50');
+        submitBtn.classList.remove('cursor-pointer');
+      }
+    }
+
+    newPwd.addEventListener('input', validatePwdForm);
+    confirmNewPwd.addEventListener('input', validatePwdForm);
+
+    function updatePwdCrit(el, passed) {
+      if (!el) return;
+      const icon = el.querySelector('.status-icon');
+      if (passed) {
+        el.classList.remove('text-slate-400');
+        el.classList.add('text-green-600');
+        if (icon) icon.textContent = '✓';
+      } else {
+        el.classList.remove('text-green-600');
+        el.classList.add('text-slate-400');
+        if (icon) icon.textContent = '▪';
+      }
+    }
+
+    function resetPwdCrit(el) {
+      if (!el) return;
+      const icon = el.querySelector('.status-icon');
+      el.classList.remove('text-green-600');
+      el.classList.add('text-slate-400');
+      if (icon) icon.textContent = '▪';
+    }
+  });
+</script>
+
+<script is:inline>
+  document.addEventListener('DOMContentLoaded', () => {
+    const userIn = document.getElementById('new_admin_username');
+    const userErr = document.getElementById('new-admin-user-error');
+    const pwdIn = document.getElementById('new_admin_password');
+    const confirmIn = document.getElementById('new_admin_confirm_password');
+    const confirmErr = document.getElementById('new-admin-confirm-error');
+    const strengthBar = document.getElementById('new-admin-strength-bar');
+    const strengthText = document.getElementById('new-admin-strength-text');
+    const submitBtn = document.getElementById('submit-new-admin-btn');
+
+    // Criteria elements
+    const critLength = document.getElementById('new-admin-crit-length');
+    const critUpper = document.getElementById('new-admin-crit-upper');
+    const critLower = document.getElementById('new-admin-crit-lower');
+    const critNumber = document.getElementById('new-admin-crit-number');
+    const critSpecial = document.getElementById('new-admin-crit-special');
+
+    if (!userIn || !pwdIn || !confirmIn || !submitBtn) return;
+
+    const emailIn = document.getElementById('new_admin_email');
+    const emailErr = document.getElementById('new-admin-email-error');
+
+    let isUsernameValid = false;
+    let isEmailValid = false;
+    let isStrong = false;
+
+    function checkNewAdminStrength() {
+      const val = pwdIn.value;
+      if (!val) {
+        strengthBar.style.width = '0%';
+        strengthBar.style.backgroundColor = '#CBD5E1';
+        strengthText.textContent = 'Belum diisi';
+        strengthText.className = 'font-semibold text-slate-400';
+        isStrong = false;
+        
+        resetNewCrit(critLength);
+        resetNewCrit(critUpper);
+        resetNewCrit(critLower);
+        resetNewCrit(critNumber);
+        resetNewCrit(critSpecial);
+        return;
+      }
+
+      const checks = {
+        length: val.length >= 8,
+        upper: /[A-Z]/.test(val),
+        lower: /[a-z]/.test(val),
+        number: /\d/.test(val),
+        special: /[@$!%*?&#_.\-+=~`'":;?,<>|\(\)\[\]\{\}\\\/^\*]/.test(val)
+      };
+
+      updateNewCrit(critLength, checks.length);
+      updateNewCrit(critUpper, checks.upper);
+      updateNewCrit(critLower, checks.lower);
+      updateNewCrit(critNumber, checks.number);
+      updateNewCrit(critSpecial, checks.special);
+
+      const score = Object.values(checks).filter(Boolean).length;
+
+      let color = '#EF4444'; // Red
+      let text = 'Sangat Lemah';
+      let width = '20%';
+      let textColorCls = 'text-red-500 font-semibold';
+
+      if (score === 2) {
+        color = '#F97316'; // Orange
+        text = 'Lemah';
+        width = '40%';
+        textColorCls = 'text-orange-500 font-semibold';
+      } else if (score === 3) {
+        color = '#EAB308'; // Yellow
+        text = 'Sedang';
+        width = '65%';
+        textColorCls = 'text-yellow-600 font-semibold';
+      } else if (score >= 4) {
+        color = '#22C55E'; // Green
+        text = 'Kuat';
+        width = '100%';
+        textColorCls = 'text-green-600 font-semibold';
+      }
+
+      strengthBar.style.width = width;
+      strengthBar.style.backgroundColor = color;
+      strengthText.textContent = text;
+      strengthText.className = textColorCls;
+
+      isStrong = score >= 3 && checks.length;
+    }
+
+    function validateNewAdminForm() {
+      // 1. Check Username
+      const usernameVal = userIn.value;
+      const usernameRegex = /^[a-zA-Z0-9_-]{3,20}$/;
+      
+      if (usernameVal) {
+        if (!usernameRegex.test(usernameVal)) {
+          userErr.classList.remove('hidden');
+          isUsernameValid = false;
+        } else {
+          userErr.classList.add('hidden');
+          isUsernameValid = true;
+        }
+      } else {
+        userErr.classList.add('hidden');
+        isUsernameValid = false;
+      }
+
+      // 2. Check email
+      if (emailIn) {
+        const emailVal = emailIn.value;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (emailVal) {
+          if (!emailRegex.test(emailVal)) {
+            emailErr && emailErr.classList.remove('hidden');
+            isEmailValid = false;
+          } else {
+            emailErr && emailErr.classList.add('hidden');
+            isEmailValid = true;
+          }
+        } else {
+          emailErr && emailErr.classList.add('hidden');
+          isEmailValid = false;
+        }
+      }
+
+      // 3. Check password strength
+      checkNewAdminStrength();
+
+      // 3. Check password confirmation matches
+      const pwdVal = pwdIn.value;
+      const confirmVal = confirmIn.value;
+      
+      let matches = false;
+      
+      if (confirmVal) {
+        if (pwdVal !== confirmVal) {
+          confirmErr.classList.remove('hidden');
+          matches = false;
+        } else {
+          confirmErr.classList.add('hidden');
+          matches = true;
+        }
+      } else {
+        confirmErr.classList.add('hidden');
+        matches = false;
+      }
+
+      // Enable/Disable
+      if (isUsernameValid && isEmailValid && isStrong && matches) {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('cursor-not-allowed', 'opacity-50');
+        submitBtn.classList.add('cursor-pointer');
+      } else {
+        submitBtn.disabled = true;
+        submitBtn.classList.add('cursor-not-allowed', 'opacity-50');
+        submitBtn.classList.remove('cursor-pointer');
+      }
+    }
+
+    userIn.addEventListener('input', validateNewAdminForm);
+    emailIn && emailIn.addEventListener('input', validateNewAdminForm);
+    pwdIn.addEventListener('input', validateNewAdminForm);
+    confirmIn.addEventListener('input', validateNewAdminForm);
+
+    function updateNewCrit(el, passed) {
+      if (!el) return;
+      const icon = el.querySelector('.status-icon');
+      if (passed) {
+        el.classList.remove('text-slate-400');
+        el.classList.add('text-green-600');
+        if (icon) icon.textContent = '✓';
+      } else {
+        el.classList.remove('text-green-600');
+        el.classList.add('text-slate-400');
+        if (icon) icon.textContent = '▪';
+      }
+    }
+
+    function resetNewCrit(el) {
+      if (!el) return;
+      const icon = el.querySelector('.status-icon');
+      el.classList.remove('text-green-600');
+      el.classList.add('text-slate-400');
+      if (icon) icon.textContent = '▪';
+    }
   });
 </script>
 

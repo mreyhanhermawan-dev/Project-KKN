@@ -9,6 +9,8 @@ interface Env {
   MEDIA_BUCKET?: R2Bucket;
   SESSION_KV: KVNamespace;
   ANALYTICS_TOKEN?: string;
+  RESEND_API_KEY?: string;
+  APP_URL?: string;
 }
 
 declare module "cloudflare:workers" {
@@ -19,5 +21,6 @@ declare module "cloudflare:workers" {
 declare namespace App {
   interface Locals {
     user?: { username: string };
+    csrfToken?: string;
   }
 }

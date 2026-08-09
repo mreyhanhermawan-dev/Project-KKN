@@ -42,31 +42,270 @@ const error = Astro.url.searchParams.get('error');
     )}
 
     <form method="POST" action="/api/admin/setup" class="bg-white rounded-xl p-6" style="box-shadow:var(--shadow-md);">
+      <input type="hidden" name="csrf_token" value={Astro.locals.csrfToken} />
       <div class="space-y-4">
         <div>
           <label for="username" class="block font-heading font-medium text-sm mb-1.5">
-            Nama Pengguna <span>*</span> <span class="font-normal text-text-muted">(wajib)</span>
+            Nama Pengguna <span>*</span> <span class="font-normal text-text-muted">(wajib, 3-20 karakter: huruf, angka, _, -)</span>
           </label>
           <input type="text" id="username" name="username" required
+            pattern="[a-zA-Z0-9_-]{3,20}"
+            title="3-20 karakter berupa huruf, angka, garis bawah (_), atau strip (-)"
             class="w-full rounded-lg border px-4 py-3 text-base"
             style="border-color:var(--color-border); min-height:44px;" />
+          <p id="username-error" class="text-xs text-red-500 mt-1 hidden">Nama pengguna tidak valid. Gunakan 3-20 karakter berupa huruf, angka, strip (-), atau garis bawah (_).</p>
+        </div>
+        <div>
+          <label for="email" class="block font-heading font-medium text-sm mb-1.5">
+            Alamat Email <span>*</span> <span class="font-normal text-text-muted">(untuk pemulihan kata sandi)</span>
+          </label>
+          <input type="email" id="email" name="email" required
+            autocomplete="email"
+            placeholder="contoh@email.com"
+            class="w-full rounded-lg border px-4 py-3 text-base"
+            style="border-color:var(--color-border); min-height:44px;" />
+          <p id="email-error" class="text-xs text-red-500 mt-1 hidden">Format email tidak valid.</p>
         </div>
         <div>
           <label for="password" class="block font-heading font-medium text-sm mb-1.5">
-            Kata Sandi <span>*</span> <span class="font-normal text-text-muted">(wajib, min. 8 karakter)</span>
+            Kata Sandi <span>*</span> <span class="font-normal text-text-muted">(wajib)</span>
           </label>
           <input type="password" id="password" name="password" required minlength="8"
             class="w-full rounded-lg border px-4 py-3 text-base"
             style="border-color:var(--color-border); min-height:44px;" />
+          
+          <!-- Password Strength Meter -->
+          <div class="mt-2.5 space-y-2">
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-text-muted">Kekuatan Kata Sandi:</span>
+              <span id="strength-text" class="font-semibold text-slate-400">Belum diisi</span>
+            </div>
+            <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+              <div id="strength-bar" class="h-full w-0 transition-all duration-300 ease-out bg-slate-400"></div>
+            </div>
+            
+            <!-- Criteria Checklist -->
+            <div class="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px] pt-1 border-t border-slate-100 mt-2">
+              <div id="crit-length" class="flex items-center gap-1.5 text-slate-400 transition-colors">
+                <span class="status-icon font-bold">▪</span> Minimal 8 karakter
+              </div>
+              <div id="crit-upper" class="flex items-center gap-1.5 text-slate-400 transition-colors">
+                <span class="status-icon font-bold">▪</span> Huruf Besar (A-Z)
+              </div>
+              <div id="crit-lower" class="flex items-center gap-1.5 text-slate-400 transition-colors">
+                <span class="status-icon font-bold">▪</span> Huruf Kecil (a-z)
+              </div>
+              <div id="crit-number" class="flex items-center gap-1.5 text-slate-400 transition-colors">
+                <span class="status-icon font-bold">▪</span> Angka (0-9)
+              </div>
+              <div id="crit-special" class="flex items-center gap-1.5 text-slate-400 transition-colors col-span-2">
+                <span class="status-icon font-bold">▪</span> Karakter Khusus (@$!%*?&#)
+              </div>
+            </div>
+          </div>
         </div>
-        <button type="submit"
-          class="w-full rounded-lg font-heading font-semibold text-white py-3 cursor-pointer"
+
+        <div>
+          <label for="confirm_password" class="block font-heading font-medium text-sm mb-1.5">
+            Konfirmasi Kata Sandi <span>*</span> <span class="font-normal text-text-muted">(wajib)</span>
+          </label>
+          <input type="password" id="confirm_password" name="confirm_password" required minlength="8"
+            class="w-full rounded-lg border px-4 py-3 text-base"
+            style="border-color:var(--color-border); min-height:44px;" />
+          <p id="confirm-error" class="text-xs text-red-500 mt-1 hidden">Kata sandi tidak cocok.</p>
+        </div>
+
+        <button type="submit" id="submit-btn" disabled
+          class="w-full rounded-lg font-heading font-semibold text-white py-3 cursor-not-allowed opacity-50 transition-all duration-200"
           style="background:var(--color-cta); min-height:44px;">
           Buat Akun & Masuk
         </button>
       </div>
     </form>
   </div>
+
+  <script is:inline>
+    document.addEventListener('DOMContentLoaded', () => {
+      const usernameInput = document.getElementById('username');
+      const usernameError = document.getElementById('username-error');
+      const passwordInput = document.getElementById('password');
+      const confirmInput = document.getElementById('confirm_password');
+      const confirmError = document.getElementById('confirm-error');
+      const strengthBar = document.getElementById('strength-bar');
+      const strengthText = document.getElementById('strength-text');
+      const submitBtn = document.getElementById('submit-btn');
+
+      // Criteria elements
+      const criteriaLength = document.getElementById('crit-length');
+      const criteriaUpper = document.getElementById('crit-upper');
+      const criteriaLower = document.getElementById('crit-lower');
+      const criteriaNumber = document.getElementById('crit-number');
+      const criteriaSpecial = document.getElementById('crit-special');
+
+      const emailInput = document.getElementById('email');
+      const emailError = document.getElementById('email-error');
+
+      if (!passwordInput || !confirmInput || !usernameInput || !emailInput) return;
+
+      let isEmailValid = false;
+
+      let isStrong = false;
+      let isUsernameValid = false;
+
+      function checkStrength() {
+        const val = passwordInput.value;
+        if (!val) {
+          strengthBar.style.width = '0%';
+          strengthBar.style.backgroundColor = '#CBD5E1';
+          strengthText.textContent = 'Belum diisi';
+          strengthText.className = 'font-semibold text-slate-400';
+          isStrong = false;
+          
+          resetCrit(criteriaLength);
+          resetCrit(criteriaUpper);
+          resetCrit(criteriaLower);
+          resetCrit(criteriaNumber);
+          resetCrit(criteriaSpecial);
+          return;
+        }
+
+        const checks = {
+          length: val.length >= 8,
+          upper: /[A-Z]/.test(val),
+          lower: /[a-z]/.test(val),
+          number: /\d/.test(val),
+          special: /[@$!%*?&#_.\-+=~`'":;?,<>|\(\)\[\]\{\}\\\/^\*]/.test(val)
+        };
+
+        updateCrit(criteriaLength, checks.length);
+        updateCrit(criteriaUpper, checks.upper);
+        updateCrit(criteriaLower, checks.lower);
+        updateCrit(criteriaNumber, checks.number);
+        updateCrit(criteriaSpecial, checks.special);
+
+        const score = Object.values(checks).filter(Boolean).length;
+
+        let color = '#EF4444'; // Red
+        let text = 'Sangat Lemah';
+        let width = '20%';
+        let textColorCls = 'text-red-500 font-semibold';
+
+        if (score === 2) {
+          color = '#F97316'; // Orange
+          text = 'Lemah';
+          width = '40%';
+          textColorCls = 'text-orange-500 font-semibold';
+        } else if (score === 3) {
+          color = '#EAB308'; // Yellow
+          text = 'Sedang';
+          width = '65%';
+          textColorCls = 'text-yellow-600 font-semibold';
+        } else if (score >= 4) {
+          color = '#22C55E'; // Green
+          text = 'Kuat';
+          width = '100%';
+          textColorCls = 'text-green-600 font-semibold';
+        }
+
+        strengthBar.style.width = width;
+        strengthBar.style.backgroundColor = color;
+        strengthText.textContent = text;
+        strengthText.className = textColorCls;
+
+        isStrong = score >= 3 && checks.length;
+      }
+
+      function validateForm() {
+        checkStrength();
+        
+        const usernameVal = usernameInput.value;
+        const usernameRegex = /^[a-zA-Z0-9_-]{3,20}$/;
+        
+        if (usernameVal) {
+          if (!usernameRegex.test(usernameVal)) {
+            usernameError.classList.remove('hidden');
+            isUsernameValid = false;
+          } else {
+            usernameError.classList.add('hidden');
+            isUsernameValid = true;
+          }
+        } else {
+          usernameError.classList.add('hidden');
+          isUsernameValid = false;
+        }
+
+        const emailVal = emailInput.value;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (emailVal) {
+          if (!emailRegex.test(emailVal)) {
+            emailError.classList.remove('hidden');
+            isEmailValid = false;
+          } else {
+            emailError.classList.add('hidden');
+            isEmailValid = true;
+          }
+        } else {
+          emailError.classList.add('hidden');
+          isEmailValid = false;
+        }
+
+        const passwordVal = passwordInput.value;
+        const confirmVal = confirmInput.value;
+        
+        let matches = false;
+        
+        if (confirmVal) {
+          if (passwordVal !== confirmVal) {
+            confirmError.classList.remove('hidden');
+            matches = false;
+          } else {
+            confirmError.classList.add('hidden');
+            matches = true;
+          }
+        } else {
+          confirmError.classList.add('hidden');
+          matches = false;
+        }
+
+        if (isUsernameValid && isEmailValid && isStrong && matches) {
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('cursor-not-allowed', 'opacity-50');
+          submitBtn.classList.add('cursor-pointer');
+        } else {
+          submitBtn.disabled = true;
+          submitBtn.classList.add('cursor-not-allowed', 'opacity-50');
+          submitBtn.classList.remove('cursor-pointer');
+        }
+      }
+
+      usernameInput.addEventListener('input', validateForm);
+      emailInput.addEventListener('input', validateForm);
+      passwordInput.addEventListener('input', validateForm);
+      confirmInput.addEventListener('input', validateForm);
+
+      function updateCrit(el, passed) {
+        if (!el) return;
+        const icon = el.querySelector('.status-icon');
+        if (passed) {
+          el.classList.remove('text-slate-400');
+          el.classList.add('text-green-600');
+          if (icon) icon.textContent = '✓';
+        } else {
+          el.classList.remove('text-green-600');
+          el.classList.add('text-slate-400');
+          if (icon) icon.textContent = '▪';
+        }
+      }
+
+      function resetCrit(el) {
+        if (!el) return;
+        const icon = el.querySelector('.status-icon');
+        el.classList.remove('text-green-600');
+        el.classList.add('text-slate-400');
+        if (icon) icon.textContent = '▪';
+      }
+    });
+  </script>
 
 </body>
 </html>

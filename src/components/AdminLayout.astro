@@ -8,6 +8,7 @@ interface Props {
 }
 
 const { title, breadcrumb, currentPath = Astro.url.pathname } = Astro.props;
+const csrfToken = Astro.locals.csrfToken;
 
 const menuItems = [
     { href: "/admin/dasbor", label: "Dasbor", icon: "grid" },
@@ -213,6 +214,21 @@ const isActive = (href: string) => currentPath.startsWith(href);
         overlay?.addEventListener("click", closeSidebar);
         document.addEventListener("keydown", (e) => {
             if (e.key === "Escape") closeSidebar();
+        });
+    </script>
+
+    <script define:vars={{ csrfToken }}>
+        document.addEventListener("submit", (e) => {
+            const form = e.target;
+            if (form && form.method.toUpperCase() === "POST") {
+                if (!form.querySelector('input[name="csrf_token"]')) {
+                    const input = document.createElement("input");
+                    input.type = "hidden";
+                    input.name = "csrf_token";
+                    input.value = csrfToken;
+                    form.appendChild(input);
+                }
+            }
         });
     </script>
 </html>
