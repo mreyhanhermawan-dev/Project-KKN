@@ -121,13 +121,13 @@ const errors = Astro.url.searchParams.get('errors')?.split(',') ?? [];
       }
     }
     actionInput.value = action;
-    form.submit();
+    form.requestSubmit();
   }
 
   document.getElementById('btn-draft')?.addEventListener('click', () => {
     hidden.value = editor.innerHTML;
     actionInput.value = 'draft';
-    form.submit();
+    form.requestSubmit();
   });
   document.getElementById('btn-publish')?.addEventListener('click', () => validateAndSubmit('publish'));
 </script>

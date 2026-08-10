@@ -107,7 +107,7 @@ const published = Astro.url.searchParams.get('published');
   initEditor(editor, hidden);
 
   document.getElementById('btn-draft')?.addEventListener('click', () => {
-    hidden.value = editor.innerHTML; actionInput.value = 'draft'; form.submit();
+    hidden.value = editor.innerHTML; actionInput.value = 'draft'; form.requestSubmit();
   });
   document.getElementById('btn-publish')?.addEventListener('click', () => {
     const judul = (document.getElementById('judul') as HTMLInputElement).value.trim();
@@ -115,6 +115,6 @@ const published = Astro.url.searchParams.get('published');
     if (!judul || !isi) {
       alert('Judul dan isi berita wajib diisi sebelum diterbitkan.'); return;
     }
-    hidden.value = editor.innerHTML; actionInput.value = 'publish'; form.submit();
+    hidden.value = editor.innerHTML; actionInput.value = 'publish'; form.requestSubmit();
   });
 </script>
