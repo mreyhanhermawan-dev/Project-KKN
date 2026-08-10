@@ -50,6 +50,7 @@ const deleted = Astro.url.searchParams.get('deleted');
                 onsubmit="return confirm('Hapus gambar ini permanen? Gambar akan terlepas dari semua konten.')"
                 class="w-full"
               >
+                <input type="hidden" name="csrf_token" value={Astro.locals.csrfToken} />
                 <input type="hidden" name="_action" value="delete" />
                 <input type="hidden" name="media_id" value={String(m.id)} />
                 <input type="hidden" name="back" value="/admin/media?deleted=1" />

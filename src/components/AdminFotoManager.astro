@@ -38,6 +38,7 @@ const statusId = `foto-status-${ownerType}-${ownerId}`;
           <div class="flex gap-1 p-1.5">
             {i !== 0 && (
               <form method="POST" action="/api/admin/media/manage">
+                <input type="hidden" name="csrf_token" value={Astro.locals.csrfToken} />
                 <input type="hidden" name="_action" value="cover" />
                 <input type="hidden" name="media_id" value={m.id} />
                 <input type="hidden" name="owner_type" value={ownerType} />
@@ -50,6 +51,7 @@ const statusId = `foto-status-${ownerType}-${ownerId}`;
               </form>
             )}
             <form method="POST" action="/api/admin/media/manage" onsubmit="return confirm('Hapus foto ini?')">
+              <input type="hidden" name="csrf_token" value={Astro.locals.csrfToken} />
               <input type="hidden" name="_action" value="delete" />
               <input type="hidden" name="media_id" value={m.id} />
               <input type="hidden" name="back" value={back} />
