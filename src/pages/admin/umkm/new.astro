@@ -116,6 +116,6 @@ const categories = ['Kuliner', 'Kriya', 'Jasa', 'Hasil Tani'];
 
   const editor = document.getElementById('editor') as HTMLDivElement;
   const hidden = document.getElementById('deskripsi_html') as HTMLInputElement;
-  document.querySelector('form')?.addEventListener('submit', () => { hidden.value = editor.innerHTML; });
+  document.querySelector('main form')?.addEventListener('submit', () => { hidden.value = editor.innerHTML; });
   initEditor(editor, hidden);
 </script>
