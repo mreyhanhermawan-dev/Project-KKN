@@ -14,7 +14,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   if (!csrfToken) {
     csrfToken = generateSessionId();
     context.cookies.set('csrf_token', csrfToken, {
-      httpOnly: true,
+      httpOnly: false,
       secure: isSecureCookieRequired(context.url),
       sameSite: 'lax',
       path: '/',

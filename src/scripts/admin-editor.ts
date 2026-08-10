@@ -75,6 +75,11 @@ export function attachFotoUploadHandlers(): void {
   });
 }
 
+function getCsrfToken(): string {
+  const match = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]+)/);
+  return match?.[1] ?? '';
+}
+
 export async function uploadImage(
   file: File,
   alt: string,
@@ -86,7 +91,11 @@ export async function uploadImage(
   fd.set('thumb', thumb, 'thumb.webp');
   fd.set('alt', alt);
   for (const [k, v] of Object.entries(extra)) fd.set(k, v);
-  const res = await fetch('/api/admin/media', { method: 'POST', body: fd });
+  const res = await fetch('/api/admin/media', {
+    method: 'POST',
+    body: fd,
+    headers: { 'X-CSRF-Token': getCsrfToken() },
+  });
   if (!res.ok) throw new Error(`upload gagal (${res.status})`);
   return res.json();
 }
