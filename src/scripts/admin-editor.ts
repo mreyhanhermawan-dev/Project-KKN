@@ -76,6 +76,8 @@ export function attachFotoUploadHandlers(): void {
 }
 
 function getCsrfToken(): string {
+  const meta = document.querySelector('meta[name="csrf-token"]');
+  if (meta) return meta.getAttribute('content') ?? '';
   const match = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]+)/);
   return match?.[1] ?? '';
 }
