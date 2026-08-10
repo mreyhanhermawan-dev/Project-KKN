@@ -366,17 +366,22 @@ if (slug === 'beranda-sekilas') {
     renderDuties();
   }
 
-  document.querySelector('main form')?.addEventListener('submit', () => {
-    hidden.value = editor.innerHTML;
+  document.addEventListener('submit', (e) => {
+    const form = e.target as HTMLFormElement;
+    if (!form || !form.action.includes('/api/admin/konten')) return;
+
+    if (editor && hidden) {
+      hidden.value = editor.innerHTML;
+    }
 
     // Sync metadata inputs
     const namaInput = document.getElementById('lurah_nama') as HTMLInputElement;
     const jabatanInput = document.getElementById('lurah_jabatan') as HTMLInputElement;
     const coverAltInput = document.getElementById('cover_alt_input') as HTMLInputElement;
-    if (namaInput && jabatanInput && coverAltInput) {
+    if (namaInput && coverAltInput) {
       coverAltInput.value = JSON.stringify({
         nama: namaInput.value,
-        jabatan: jabatanInput.value
+        jabatan: jabatanInput ? jabatanInput.value : ''
       });
     }
   });
