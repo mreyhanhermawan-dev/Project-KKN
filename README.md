@@ -2,7 +2,7 @@
 
 Website resmi Kelurahan Palabuhanratu, dibangun sebagai bagian dari program **KKN-T Inovasi IPB University 2026** di Kelurahan Palabuhanratu, Kabupaten Sukabumi. Situs ini menampilkan profil kelurahan, potensi (pertanian, perikanan, pariwisata, sumber daya manusia), direktori UMKM, peta interaktif, dan berita kelurahan, lengkap dengan panel admin agar perangkat desa dapat mengelola konten sendiri tanpa bantuan teknis.
 
-Situs berjalan langsung di [palabuhanratu.web.id](https://palabuhanratu.web.id).
+Situs berjalan langsung di [palabuhanratu.web.id](https://kelplratu.web.id).
 
 ## Tumpukan Teknologi (Tech Stack)
 
